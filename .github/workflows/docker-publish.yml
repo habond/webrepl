@@ -36,7 +36,10 @@ jobs:
           - name: backend-php
             dockerfile: backend/php/Dockerfile
             context: backend/php
-          - name: backend-session-manager
+          - name: backend-kotlin
+            dockerfile: backend/kotlin/Dockerfile
+            context: backend/kotlin
+          - name: session-manager
             dockerfile: backend/session-manager/Dockerfile
             context: backend/session-manager
 

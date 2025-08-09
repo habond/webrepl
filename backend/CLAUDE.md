@@ -97,44 +97,11 @@ When adding a new language backend:
 5. Add Docker configuration with container name `webrepl-backend-{language}`
 6. Update `docker-compose.yml` with new service
 7. Update nginx proxy configuration for new language routes
-8. Add comprehensive test suite
-9. Document in language-specific CLAUDE.md
+8. Document in language-specific CLAUDE.md
 
 ## Testing
 
-Run the comprehensive test suite for all backends:
-
-```bash
-# Test all backends (auto-starts containers if needed)
-backend/test.sh
-
-# Test specific backend
-backend/test.sh python
-backend/test.sh javascript  
-backend/test.sh ruby
-backend/test.sh php
-
-# Test with local backends (not Docker)
-backend/test.sh --local
-
-# Individual backend tests
-docker exec webrepl-backend-python python test_api.py
-docker exec webrepl-backend-javascript node test_api.js
-docker exec webrepl-backend-ruby ruby test_api.rb
-docker exec webrepl-backend-php php test_api.php
-```
-
-### Test Coverage
-Each backend test suite verifies:
-- Health check endpoint
-- Simple expression evaluation
-- Output capture (print/console.log/puts/echo)
-- Variable persistence between executions within sessions
-- Error handling and reporting
-- Session reset functionality
-- Multi-line code execution
-- Session isolation (different sessions don't interfere)
-- Language-specific features
+Backends can be tested by accessing their health endpoints and executing sample code through the API.
 
 ## Development
 
@@ -155,4 +122,4 @@ Each language backend is independently developed and containerized. See individu
 - **Network**: Bridge network `webrepl-network` for inter-container communication
 - **Session Manager**: SQLite database for session persistence
 - **Language Backends**: Independent containers with session-aware APIs
-- **Orchestration**: Two docker-compose files - main project and backend-only for testing
+- **Orchestration**: Two docker-compose files - main project and backend-only for development

@@ -99,8 +99,6 @@ make dev
 # or
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
-# Run tests
-python test_api.py
 ```
 
 ### Code Quality
@@ -168,24 +166,7 @@ def reset_session_namespace(session_id: str):
 
 ## Testing
 
-The test suite (`test_api.py`) verifies:
-- Health check endpoint functionality
-- Basic expression evaluation
-- Print statement output capture  
-- Variable persistence between executions within same session
-- Session isolation (different sessions don't share variables)
-- Error handling for syntax and runtime errors
-- Multi-line code execution
-- Namespace reset functionality
-- Import statement persistence
-
-```bash
-# Run tests locally
-python test_api.py
-
-# Run tests in Docker container
-docker exec webrepl-backend-python python test_api.py
-```
+The backend can be tested by accessing the health endpoint and executing sample Python code through the API.
 
 ## Development Commands
 

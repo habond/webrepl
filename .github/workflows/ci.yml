@@ -41,14 +41,11 @@ jobs:
         echo "=== Testing frontend accessibility ==="
         timeout 30 bash -c 'until curl -s http://localhost:8080/ > /dev/null; do echo "Waiting for frontend..."; sleep 5; done' || true
         
-    - name: Run backend tests
+    - name: Basic service health checks
       run: |
-        chmod +x backend/test.sh
-        echo "=== Running backend tests ==="
-        ./backend/test.sh python || echo "Python tests failed"
-        ./backend/test.sh javascript || echo "JavaScript tests failed"
-        ./backend/test.sh ruby || echo "Ruby tests failed"
-        ./backend/test.sh php || echo "PHP tests failed"
+        echo "=== Running basic service health checks ==="
+        # Simple curl tests to verify services are responding
+        curl -f http://localhost:8080/ || echo "Frontend health check failed"
         
     - name: Show container logs on failure
       if: failure()

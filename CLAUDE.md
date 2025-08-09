@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Multi-Language Web REPL v2.0
 
-A containerized web-based REPL with React frontend supporting multiple programming languages. Features a terminal-like interface for executing stateful code in Python, JavaScript, and Ruby with advanced session management, automatic cleanup, structured logging, and comprehensive development tooling.
+A containerized web-based REPL with React frontend supporting multiple programming languages. Features a terminal-like interface for executing stateful code in Python, JavaScript, Ruby, PHP, and Kotlin with advanced session management, automatic cleanup, structured logging, and comprehensive development tooling.
 
 ## Core Architecture
 
@@ -31,7 +31,18 @@ Each supported language runs as a separate containerized backend:
 - Session-based persistent variable context
 - Container: `webrepl-backend-php` on port 8000
 
-**Session Management**: Each user session has its own GUID-based execution environment with automatic cleanup and monitoring. Sessions are completely isolated from each other with metadata tracking (execution count, creation time, last access). Language selection maintains session state.
+**Kotlin Backend** (`backend/kotlin/`):
+- Ktor server with Kotlin Script Engine (JSR-223) for safe evaluation
+- Session-based persistent variable bindings using serialized contexts
+- Container: `webrepl-backend-kotlin` on port 8000
+
+**Session Manager** (`backend/session-manager/`):
+- FastAPI service with SQLite database for session persistence
+- Centralized session CRUD operations and metadata management
+- Terminal history and environment state serialization
+- Container: `webrepl-session-manager` on port 8000
+
+**Session Management**: Each user session has its own GUID-based execution environment with automatic cleanup and monitoring. Sessions are completely isolated from each other with metadata tracking (execution count, creation time, last access). Session data persists in SQLite database with terminal history.
 
 ### Terminal-Style Frontend
 The React frontend (`App.tsx`) implements a terminal interface using:
@@ -51,55 +62,27 @@ Frontend → nginx proxy (/api/{language}/*) → Language-specific backend conta
 - `/api/javascript/execute/{sessionId}` → `backend-javascript:8000/execute/{sessionId}`
 - `/api/ruby/execute/{sessionId}` → `backend-ruby:8000/execute/{sessionId}`
 - `/api/php/execute/{sessionId}` → `backend-php:8000/execute/{sessionId}`
+- `/api/kotlin/execute/{sessionId}` → `backend-kotlin:8000/execute/{sessionId}`
 - `/api/{language}/reset/{sessionId}` → `backend-{language}:8000/reset/{sessionId}`
+- `/api/sessions/*` → `session-manager:8000/*` (session management endpoints)
 
 nginx uses regex patterns to capture and forward the full path including session ID to the backends.
 
 ### Container Architecture
 - **Frontend**: nginx:alpine serving static React build + language-specific API proxy
+- **Session Manager**: FastAPI service with SQLite database for session persistence (`webrepl-session-manager`)
 - **Python Backend**: Python 3.11-slim with FastAPI (`webrepl-backend-python`)
 - **JavaScript Backend**: Node.js 20-alpine with Express (`webrepl-backend-javascript`)
 - **Ruby Backend**: Ruby 3.1-slim with Sinatra (`webrepl-backend-ruby`)
 - **PHP Backend**: PHP 8.2-cli with built-in server (`webrepl-backend-php`)
+- **Kotlin Backend**: OpenJDK 17 with Ktor server (`webrepl-backend-kotlin`)
 - **Network**: Bridge network `webrepl-network` for inter-container communication
-- **Persistence**: Session state lives in each backend container's memory (not persistent across restarts). Each session maintains its own isolated execution environment.
+- **Persistence**: Session metadata and terminal history stored in SQLite. Language execution environments persist in backend memory until restart.
 - **Orchestration**: Two docker-compose files - main project and backend-only for testing
 
 ## Testing
 
-Each backend includes a comprehensive test suite that verifies:
-- Health check endpoint
-- Simple expression evaluation  
-- Output capture (print/console.log/puts)
-- Variable persistence between executions within sessions
-- Error handling
-- Environment reset functionality per session
-- Multi-line code execution
-- Session isolation (different sessions don't interfere)
-- Language-specific features
-
-### Running Tests
-
-The test script automatically starts Docker containers if they're not running.
-
-```bash
-# Test all backends (auto-starts containers if needed)
-backend/test.sh
-
-# Test specific backend
-backend/test.sh python
-backend/test.sh javascript
-backend/test.sh ruby
-backend/test.sh php
-
-# Test locally (backends must be running)
-backend/test.sh --local
-
-# Individual backend tests (in Docker)
-docker exec webrepl-backend-python python test_api.py
-docker exec webrepl-backend-javascript node test_api.js
-docker exec webrepl-backend-ruby ruby test_api.rb
-```
+Backends can be tested by accessing their health endpoints and executing sample code through the API.
 
 ## Quick Start (Docker)
 
@@ -146,7 +129,7 @@ webrepl/
 │   ├── javascript/    # Node.js Express backend  
 │   ├── ruby/         # Ruby Sinatra backend
 │   ├── docker-compose.yml # Backend-only orchestration
-│   └── test_all.sh   # Comprehensive test runner
+│   └── docker-compose.yml # Backend-only orchestration
 ├── docker-compose.yml # Main project orchestration
 └── control.sh        # Application control script (start/stop/restart/status/logs)
 ```
@@ -264,28 +247,40 @@ Clear the execution state for the specified language and session.
 
 **Session Isolation**: Each session maintains completely separate execution environments. Variables, imports, and state are isolated between different session IDs.
 
-### Admin Endpoints
+### Session Management Endpoints
 
-### `GET /sessions`
+### `GET /api/sessions`
 List all active sessions and their metadata.
 **Response**: 
 ```json
 {
-  "active_sessions": 3,
-  "sessions": {
-    "uuid-1": {
+  "sessions": [
+    {
+      "id": "uuid-1",
+      "name": "My Session",
+      "language": "python",
       "created_at": "2025-08-08T22:00:00Z",
       "last_accessed": "2025-08-08T22:30:00Z", 
       "execution_count": 15,
-      "namespace_size": 5
+      "history": []
     }
-  }
+  ]
 }
 ```
 
-### `DELETE /sessions/{sessionId}`
+### `POST /api/sessions`
+Create a new session.
+**Request**: `{"name": "My Session", "language": "python"}`
+**Response**: `{"id": "uuid", "name": "My Session", "language": "python", ...}`
+
+### `DELETE /api/sessions/{sessionId}`
 Delete a specific session and its data.
-**Response**: `{"message": "Session deleted successfully", "sessionId": "uuid"}`
+**Response**: `{"message": "Session deleted successfully"}`
+
+### `PUT /api/sessions/{sessionId}/rename`
+Rename a session.
+**Request**: `{"name": "New Session Name"}`
+**Response**: `{"message": "Session renamed successfully"}`
 
 ## Key Implementation Details
 
@@ -327,7 +322,7 @@ Critical: nginx config at `frontend/nginx.conf` routes `/api/{language}/` to `ba
 
 ## Security Considerations
 
-This application executes arbitrary code (Python, JavaScript, Ruby, PHP) in sandboxed container environments. Each backend container has no network access to external services and limited filesystem access. Never expose this to untrusted networks without additional security measures.
+This application executes arbitrary code (Python, JavaScript, Ruby, PHP, Kotlin) in sandboxed container environments. Each backend container has no network access to external services and limited filesystem access. Never expose this to untrusted networks without additional security measures.
 
 ## Component-Specific Documentation
 
@@ -336,6 +331,7 @@ This application executes arbitrary code (Python, JavaScript, Ruby, PHP) in sand
 - JavaScript backend implementation details: `backend/javascript/CLAUDE.md`
 - Ruby backend implementation details: `backend/ruby/CLAUDE.md`
 - PHP backend implementation details: `backend/php/CLAUDE.md`
+- Kotlin backend implementation details: `backend/kotlin/CLAUDE.md`
 - Frontend implementation details: `frontend/CLAUDE.md`
 
 # Frontend Architecture Deep Dive
@@ -373,6 +369,13 @@ Each language backend exposes session-aware endpoints:
 - **Session Reset**: `/reset/{sessionId}` clears only the specific session's execution state
 - **Health Checks**: `/health` endpoints for container orchestration monitoring
 
+### Session Manager Integration
+The session manager (`backend/session-manager/`) provides centralized session persistence:
+- **SQLite Database**: Stores session metadata, terminal history, and environment state
+- **Session CRUD**: Full create, read, update, delete operations for sessions
+- **Terminal History**: Persistent terminal entry storage across browser sessions
+- **Environment Serialization**: Backend execution environments can be serialized/deserialized via session manager
+
 # Development Workflow Commands
 
 
@@ -397,18 +400,7 @@ npm start                     # Start production server
 ```
 
 ## Testing Commands
-```bash
-# Comprehensive backend testing
-backend/test.sh               # Test all backends (auto-starts Docker)
-backend/test.sh python        # Test specific backend
-backend/test.sh --local       # Test with local backends (not Docker)
-
-# Individual container tests
-docker exec webrepl-backend-python python test_api.py
-docker exec webrepl-backend-javascript node test_api.js  
-docker exec webrepl-backend-ruby ruby test_api.rb
-docker exec webrepl-backend-php php test_api.php
-```
+Backends can be tested by accessing their health endpoints and executing sample code through the API.
 
 # Critical Implementation Details
 

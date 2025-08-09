@@ -107,9 +107,6 @@ npm run dev
 
 # Run production server
 npm start
-
-# Run tests
-node test_api.js
 ```
 
 ### Code Quality
@@ -196,23 +193,7 @@ function resetSessionContext(sessionId) {
 
 ## Testing
 
-The test suite (`test_api.js`) verifies:
-- Health check endpoint functionality
-- Basic expression evaluation and console output
-- Variable persistence between executions within same session
-- Session isolation (different sessions don't share variables)
-- Error handling for syntax and runtime errors
-- Timeout protection for infinite loops
-- Context reset functionality
-- Multi-line code execution
-
-```bash
-# Run tests locally
-node test_api.js
-
-# Run tests in Docker container
-docker exec webrepl-backend-javascript node test_api.js
-```
+The backend can be tested by accessing the health endpoint and executing sample JavaScript code through the API.
 
 ## JavaScript Capabilities
 

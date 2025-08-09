@@ -115,9 +115,6 @@ bundle install
 
 # Run the server
 ruby app.rb
-
-# Run tests
-ruby test_api.rb
 ```
 
 ### Docker
@@ -227,24 +224,7 @@ text.scan(/\d+/)  # Extract numbers
 
 ## Testing
 
-The test suite (`test_api.rb`) verifies:
-- Health check endpoint functionality
-- Basic expression evaluation and output capture
-- Variable and method persistence between executions within same session
-- Session isolation (different sessions don't share variables)
-- Error handling for syntax and runtime errors
-- Environment reset functionality per session
-- Multi-line code execution
-- Class and module definition persistence
-- Built-in Ruby method availability
-
-```bash
-# Run tests locally
-ruby test_api.rb
-
-# Run tests in Docker container
-docker exec webrepl-backend-ruby ruby test_api.rb
-```
+The backend can be tested by accessing the health endpoint and executing sample Ruby code through the API.
 
 ## Performance Considerations
 

@@ -100,9 +100,6 @@ gradle build
 
 # Run development server
 gradle run
-
-# Run tests (once server is running)
-kotlinc -script test_api.kt
 ```
 
 ### Docker Development
@@ -166,23 +163,7 @@ private fun serializeBindings(bindings: Map<String, Any?>): String {
 
 ## Testing
 
-The test suite (`test_api.kt`) verifies:
-- Health check endpoint functionality
-- Basic expression evaluation and output capture
-- Variable persistence between executions within same session
-- Session isolation (different sessions don't share variables)
-- Error handling for syntax and runtime errors
-- Multi-line code execution with function definitions
-- Session reset functionality
-- Empty code validation
-
-```bash
-# Run tests locally (server must be running)
-kotlinc -script test_api.kt
-
-# Run tests in Docker container
-docker exec webrepl-backend-kotlin kotlinc -script test_api.kt
-```
+The backend can be tested by accessing the health endpoint and executing sample Kotlin code through the API.
 
 ## Kotlin Capabilities
 

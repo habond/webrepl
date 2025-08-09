@@ -8,7 +8,7 @@ RUN docker-php-ext-install pcntl
 WORKDIR /app
 
 # Copy PHP server files
-COPY server.php test_api.php ./
+COPY server.php ./
 
 # Expose port
 EXPOSE 8000

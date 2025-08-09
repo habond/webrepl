@@ -101,9 +101,6 @@ The backend maintains session-specific variable contexts where:
 ```bash
 # Start development server
 php -S 0.0.0.0:8000 server.php
-
-# Run tests
-php test_api.php
 ```
 
 ### Docker
@@ -113,9 +110,6 @@ docker build -t webrepl-backend-php .
 
 # Run container
 docker run -p 8000:8000 webrepl-backend-php
-
-# Run tests in container
-docker exec webrepl-backend-php php test_api.php
 ```
 
 ## Configuration
@@ -249,24 +243,7 @@ print_r($data);
 
 ## Testing
 
-The test suite (`test_api.php`) verifies:
-- Health check endpoint functionality
-- Basic expression evaluation and output capture
-- Variable persistence between executions within same session
-- Session isolation (different sessions don't share variables)
-- Error handling for parse errors and runtime exceptions
-- Context reset functionality per session
-- Multi-line code execution
-- Function and class definition persistence
-- Built-in PHP function availability
-
-```bash
-# Run tests locally
-php test_api.php
-
-# Run tests in Docker container
-docker exec webrepl-backend-php php test_api.php
-```
+The backend can be tested by accessing the health endpoint and executing sample PHP code through the API.
 
 ## Performance Considerations
 

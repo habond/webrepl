@@ -8,7 +8,7 @@ from typing import Any, Dict
 from datetime import datetime
 import httpx
 
-from fastapi import FastAPI, HTTPException, Path, Request
+from fastapi import FastAPI, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -32,11 +32,48 @@ SESSION_MANAGER_URL = "http://session-manager:8000"
 
 async def serialize_namespace(namespace: Dict[str, Any]) -> str:
     """Serialize a Python namespace to base64-encoded string"""
+    logger.error(f"ENTERING serialize_namespace with {len(namespace)} items")
     try:
-        serialized_bytes = pickle.dumps(namespace)
-        return base64.b64encode(serialized_bytes).decode('utf-8')
+        # Filter out non-serializable objects like modules, functions, etc.
+        serializable_namespace = {}
+        logger.error(f"About to iterate through namespace items")
+        
+        for key, value in namespace.items():
+            if key.startswith('__'):
+                continue  # Skip dunder variables
+            
+            logger.info(f"Processing {key}: {type(value)}")
+            try:
+                # Test if the object can be pickled
+                test_result = pickle.dumps(value)
+                serializable_namespace[key] = value
+                logger.info(f"  ✓ Added {key} to serializable namespace")
+            except Exception as pickle_error:
+                logger.info(f"  ✗ Cannot pickle {key}: {pickle_error}")
+                # Handle modules specially - store module name for re-import
+                if hasattr(value, '__name__') and str(type(value)) == "<class 'module'>":
+                    module_key = f"__module__{key}"
+                    serializable_namespace[module_key] = value.__name__
+                    logger.info(f"  ✓ Stored module {key} as {module_key} = {value.__name__}")
+                else:
+                    logger.info(f"  ✗ Skipping non-serializable object {key}")
+                # Skip other non-serializable objects
+                continue
+        
+        logger.info(f"Final serializable namespace: {list(serializable_namespace.keys())}")
+        try:
+            serialized_bytes = pickle.dumps(serializable_namespace)
+            result = base64.b64encode(serialized_bytes).decode('utf-8')
+            logger.info(f"Serialization successful, result length: {len(result)}")
+            return result
+        except Exception as pickle_err:
+            logger.warning(f"Failed to pickle final namespace: {pickle_err}")
+            logger.warning(f"Namespace contents: {serializable_namespace}")
+            return ""
     except Exception as e:
-        logger.warning(f"Failed to serialize namespace: {e}")
+        logger.warning(f"Failed to serialize namespace (outer): {e}")
+        import traceback
+        logger.warning(f"Traceback: {traceback.format_exc()}")
         return ""
 
 async def deserialize_namespace(serialized_data: str) -> Dict[str, Any]:
@@ -45,7 +82,31 @@ async def deserialize_namespace(serialized_data: str) -> Dict[str, Any]:
         if not serialized_data:
             return {}
         serialized_bytes = base64.b64decode(serialized_data.encode('utf-8'))
-        return pickle.loads(serialized_bytes)
+        namespace = pickle.loads(serialized_bytes)
+        
+        # Re-import modules that were stored as module names
+        modules_to_import = {}
+        keys_to_remove = []
+        
+        for key, value in namespace.items():
+            if key.startswith('__module__'):
+                original_key = key[10:]  # Remove '__module__' prefix
+                module_name = value
+                try:
+                    # Re-import the module
+                    imported_module = __import__(module_name)
+                    modules_to_import[original_key] = imported_module
+                    keys_to_remove.append(key)
+                except ImportError:
+                    logger.warning(f"Failed to re-import module {module_name}")
+                    keys_to_remove.append(key)
+        
+        # Remove module name entries and add the actual modules
+        for key in keys_to_remove:
+            del namespace[key]
+        namespace.update(modules_to_import)
+        
+        return namespace
     except Exception as e:
         logger.warning(f"Failed to deserialize namespace: {e}")
         return {}
@@ -66,6 +127,7 @@ async def get_session_namespace(session_id: str) -> Dict[str, Any]:
 
 async def save_session_namespace(session_id: str, namespace: Dict[str, Any]):
     """Save the execution namespace for a session to the session manager"""
+    logger.error(f"ENTERING save_session_namespace with namespace keys: {list(namespace.keys())}")
     try:
         serialized_data = await serialize_namespace(namespace)
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -176,7 +238,7 @@ async def execute_code(
                 result = eval(code, namespace)
                 # If eval succeeds and returns a value (not None), display it
                 if result is not None:
-                    print(repr(result))
+                    print(result)
             except SyntaxError:
                 # If eval fails, try exec (for statements like assignments, imports, etc.)
                 exec(code, namespace)
