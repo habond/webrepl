@@ -74,7 +74,9 @@ class SessionInfo(BaseModel):
 LANGUAGE_BACKENDS = {
     "python": "http://backend-python:8000",
     "javascript": "http://backend-javascript:8000", 
-    "ruby": "http://backend-ruby:8000"
+    "ruby": "http://backend-ruby:8000",
+    "php": "http://backend-php:8000",
+    "kotlin": "http://backend-kotlin:8000"
 }
 
 @asynccontextmanager

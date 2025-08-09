@@ -60,6 +60,13 @@ The session manager provides:
 - **Container**: `webrepl-backend-php`
 - **Documentation**: `backend/php/CLAUDE.md`
 
+### Kotlin (`/backend/kotlin/`)
+- **Framework**: Ktor server with Kotlin Script Engine (JSR-223)
+- **Features**: Session-based persistent variable bindings using serialized contexts
+- **Port**: 8000 (container internal)
+- **Container**: `webrepl-backend-kotlin`
+- **Documentation**: `backend/kotlin/CLAUDE.md`
+
 ## Session Architecture
 
 ### Session Isolation
@@ -84,7 +91,9 @@ Frontend → nginx proxy (/api/{language}/*) → Language-specific backend conta
 - `/api/javascript/execute/{sessionId}` → `backend-javascript:8000/execute/{sessionId}`
 - `/api/ruby/execute/{sessionId}` → `backend-ruby:8000/execute/{sessionId}`
 - `/api/php/execute/{sessionId}` → `backend-php:8000/execute/{sessionId}`
+- `/api/kotlin/execute/{sessionId}` → `backend-kotlin:8000/execute/{sessionId}`
 - `/api/{language}/reset/{sessionId}` → `backend-{language}:8000/reset/{sessionId}`
+- `/api/sessions/*` → `session-manager:8000/sessions/*` (session management endpoints)
 
 ## Adding New Languages
 

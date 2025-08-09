@@ -4,7 +4,7 @@ React application providing a web-based terminal interface for multi-language RE
 
 ## Stack
 
-- **Framework**: React 18 + TypeScript
+- **Framework**: React 19 + TypeScript
 - **Build Tool**: Vite with HMR and ESLint rules
 - **Styling**: CSS with terminal-inspired design (no framework)
 - **HTTP Client**: Fetch API
@@ -13,7 +13,7 @@ React application providing a web-based terminal interface for multi-language RE
 
 ## Features v2.0
 
-- **Multi-Language Support**: Python, JavaScript, Ruby, PHP language selection
+- **Multi-Language Support**: Python, JavaScript, Ruby, PHP, Kotlin language selection
 - **Session Management**: UUID-based sessions with persistent execution contexts
 - **Terminal Interface**: Terminal-style UI with chronological entry history
 - **Session Switching**: Create, select, and manage multiple sessions
@@ -71,6 +71,7 @@ The frontend uses three core custom hooks:
 - **JavaScript**: `/api/javascript/execute/{sessionId}`
 - **Ruby**: `/api/ruby/execute/{sessionId}`
 - **PHP**: `/api/php/execute/{sessionId}`
+- **Kotlin**: `/api/kotlin/execute/{sessionId}`
 
 ## Development
 
@@ -137,7 +138,7 @@ Integrated ESLint configuration handles both linting and formatting:
 
 ### Session Management UI
 - **Session Selector**: Dropdown for switching between active sessions
-- **Language Selector**: Toggle between Python, JavaScript, Ruby, PHP
+- **Language Selector**: Toggle between Python, JavaScript, Ruby, PHP, Kotlin
 - **Create Session**: Button to create new isolated sessions
 - **Delete Session**: Remove sessions and cleanup state
 
@@ -152,7 +153,7 @@ Integrated ESLint configuration handles both linting and formatting:
 ## UI Flow v2.0
 
 1. **Session Creation**: User creates new session or selects existing session
-2. **Language Selection**: Choose programming language (Python/JavaScript/Ruby/PHP)
+2. **Language Selection**: Choose programming language (Python/JavaScript/Ruby/PHP/Kotlin)
 3. **Code Input**: Type code in terminal-style input field
 4. **Execution**: Press Enter or click Run button
 5. **Session Persistence**: Code execution updates session-specific context
@@ -202,7 +203,7 @@ interface TerminalEntry {
 ## Development Notes
 
 - **TypeScript**: Strict type checking with comprehensive interface definitions
-- **React 18**: Uses modern React features including hooks and concurrent rendering
+- **React 19**: Uses modern React features including hooks and concurrent rendering
 - **State Management**: Custom hooks provide clean separation of concerns
 - **Testing**: Ready for test suite integration with React Testing Library
 - **Accessibility**: Terminal interface supports keyboard navigation and screen readers

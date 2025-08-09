@@ -58,17 +58,18 @@ docker-compose down
 
 ## 🧪 Testing
 
-Run comprehensive backend tests:
+Backends can be tested by accessing their health endpoints and executing sample code through the API:
 
 ```bash
-# Test all backends
-backend/test.sh
+# Check backend health
+curl http://localhost:8080/api/python/health
+curl http://localhost:8080/api/javascript/health
+curl http://localhost:8080/api/ruby/health
+curl http://localhost:8080/api/php/health
+curl http://localhost:8080/api/kotlin/health
 
-# Test specific backend
-backend/test.sh python
-backend/test.sh javascript
-backend/test.sh ruby
-backend/test.sh php
+# Test session manager
+curl http://localhost:8080/api/sessions
 ```
 
 ## 🏗️ Architecture
@@ -82,8 +83,10 @@ backend/test.sh php
 ### API Endpoints
 - `POST /api/{language}/execute/{sessionId}` - Execute code
 - `POST /api/{language}/reset/{sessionId}` - Reset session
-- `GET /sessions` - List active sessions
-- `DELETE /sessions/{sessionId}` - Delete session
+- `GET /api/sessions` - List active sessions
+- `POST /api/sessions` - Create new session
+- `DELETE /api/sessions/{sessionId}` - Delete session
+- `PUT /api/sessions/{sessionId}/rename` - Rename session
 
 ### Session Management
 Each user session maintains:
@@ -149,13 +152,21 @@ This application executes arbitrary code in sandboxed Docker containers. Each ba
 - [Project Documentation](CLAUDE.md) - Comprehensive development guide
 - [Backend Architecture](backend/CLAUDE.md) - Backend implementation details
 - [Frontend Architecture](frontend/CLAUDE.md) - Frontend implementation details
+- [Session Manager](backend/session-manager/CLAUDE.md) - Session management service details
+
+### Language-Specific Documentation
+- [Python Backend](backend/python/CLAUDE.md)
+- [JavaScript Backend](backend/javascript/CLAUDE.md)
+- [Ruby Backend](backend/ruby/CLAUDE.md)
+- [PHP Backend](backend/php/CLAUDE.md)
+- [Kotlin Backend](backend/kotlin/CLAUDE.md)
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Run tests: `backend/test.sh`
+4. Test your changes using the health endpoints and API
 5. Submit a pull request
 
 ## 📄 License

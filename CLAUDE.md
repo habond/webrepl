@@ -125,10 +125,12 @@ You can also use Docker Compose directly if needed:
 webrepl/
 ├── frontend/           # React terminal interface
 ├── backend/           # Multi-language REPL backends
+│   ├── session-manager/ # Centralized session management service
 │   ├── python/        # Python FastAPI backend
 │   ├── javascript/    # Node.js Express backend  
 │   ├── ruby/         # Ruby Sinatra backend
-│   ├── docker-compose.yml # Backend-only orchestration
+│   ├── php/          # PHP built-in server backend
+│   ├── kotlin/       # Kotlin Ktor server backend
 │   └── docker-compose.yml # Backend-only orchestration
 ├── docker-compose.yml # Main project orchestration
 └── control.sh        # Application control script (start/stop/restart/status/logs)
@@ -242,7 +244,7 @@ Clear the execution state for the specified language and session.
 **Response**: `{"message": "Namespace reset successfully"}`
 
 **Parameters**:
-- `{language}`: One of `python`, `javascript`, `ruby`, `php`
+- `{language}`: One of `python`, `javascript`, `ruby`, `php`, `kotlin`
 - `{sessionId}`: UUID string identifying the user session
 
 **Session Isolation**: Each session maintains completely separate execution environments. Variables, imports, and state are isolated between different session IDs.
