@@ -9,7 +9,7 @@ export const useCodeExecution = (sessionId: string) => {
   const executeCode = async (
     code: string, 
     selectedLanguage: Language,
-    onAddEntry: (entry: TerminalEntry) => void
+    onAddEntry: (entry: TerminalEntry) => void,
   ) => {
     if (!code.trim() || isLoading) return
 
@@ -61,6 +61,6 @@ export const useCodeExecution = (sessionId: string) => {
 
   return {
     isLoading,
-    executeCode
+    executeCode,
   }
 }

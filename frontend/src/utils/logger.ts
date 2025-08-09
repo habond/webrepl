@@ -82,7 +82,7 @@ class Logger {
     this.debug(`API Request: ${method} ${url}`, { 
       method, 
       url, 
-      sessionId: sessionId?.substring(0, 8) 
+      sessionId: sessionId?.substring(0, 8), 
     })
   }
 
@@ -128,5 +128,5 @@ export const log = {
   componentUnmount: logger.componentUnmount.bind(logger),
   userAction: logger.userAction.bind(logger),
   time: logger.time.bind(logger),
-  timeEnd: logger.timeEnd.bind(logger)
+  timeEnd: logger.timeEnd.bind(logger),
 }

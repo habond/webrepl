@@ -122,7 +122,7 @@ export const AdminPage = () => {
         return {
           decoded: decoded,
           formatted: JSON.stringify(parsed, null, 2),
-          type: 'JSON'
+          type: 'JSON',
         }
       } catch {
         // Not JSON, check if it's Python pickle format
@@ -131,7 +131,7 @@ export const AdminPage = () => {
             decoded: decoded,
             formatted: '# Python Pickle Data (binary format)\n# Cannot be displayed as text - contains serialized Python objects\n\n' +
                       `Raw bytes (first 100 chars): ${decoded.slice(0, 100).split('').map(c => c.charCodeAt(0) < 32 || c.charCodeAt(0) > 126 ? `\\x${c.charCodeAt(0).toString(16).padStart(2, '0')}` : c).join('')}${decoded.length > 100 ? '...' : ''}`,
-            type: 'Python Pickle'
+            type: 'Python Pickle',
           }
         }
         
@@ -140,7 +140,7 @@ export const AdminPage = () => {
           return {
             decoded: decoded,
             formatted: '# Serialized Environment Data\n' + decoded,
-            type: 'Serialized Data'
+            type: 'Serialized Data',
           }
         }
         
@@ -148,14 +148,14 @@ export const AdminPage = () => {
         return {
           decoded: decoded,
           formatted: decoded,
-          type: 'Raw Text'
+          type: 'Raw Text',
         }
       }
     } catch (error) {
       return {
         decoded: 'Failed to decode base64 data',
         formatted: `Error decoding: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        type: 'Error'
+        type: 'Error',
       }
     }
   }
@@ -278,7 +278,7 @@ export const AdminPage = () => {
                           <button 
                             className="expand-btn" 
                             onClick={() => toggleRowExpansion(session.id)}
-                            title={isExpanded ? "Collapse details" : "Expand details"}
+                            title={isExpanded ? 'Collapse details' : 'Expand details'}
                           >
                             <svg 
                               width="16" 
@@ -387,8 +387,8 @@ export const AdminPage = () => {
                                     const environmentData = decodeEnvironmentData(session.environment_details.data)
                                     const badgeClass = `environment-type-badge ${
                                       environmentData.type === 'JSON' ? 'json' :
-                                      environmentData.type === 'Python Pickle' ? 'pickle' :
-                                      environmentData.type === 'Error' ? 'error' : ''
+                                        environmentData.type === 'Python Pickle' ? 'pickle' :
+                                          environmentData.type === 'Error' ? 'error' : ''
                                     }`
                                     return (
                                       <div className="environment-data">

@@ -25,7 +25,7 @@ const getDefaultSessionState = (language?: string): SessionState => ({
   selectedLanguage: AVAILABLE_LANGUAGES.find(lang => lang.id === language) || AVAILABLE_LANGUAGES[0],
   currentInput: '',
   commandHistory: [],
-  historyIndex: -1
+  historyIndex: -1,
 })
 
 export const useTerminal = (sessionId: string, sessionLanguage?: string, sessionHistory?: TerminalEntry[]) => {
@@ -153,13 +153,13 @@ export const useTerminal = (sessionId: string, sessionLanguage?: string, session
     updateSessionState({ 
       history: newHistory, 
       commandHistory: newCommandHistory,
-      historyIndex: -1 // Reset history index when new command is added
+      historyIndex: -1, // Reset history index when new command is added
     })
     setSessionState(prev => ({ 
       ...prev, 
       history: newHistory, 
       commandHistory: newCommandHistory,
-      historyIndex: -1 
+      historyIndex: -1, 
     }))
 
     // Save to session manager (with fixed JSON column handling)
@@ -237,6 +237,6 @@ export const useTerminal = (sessionId: string, sessionLanguage?: string, session
     clearInput,
     focusInput,
     handleTerminalClick,
-    navigateHistory
+    navigateHistory,
   }
 }

@@ -25,7 +25,7 @@ export const Terminal = ({
   inputRef, 
   terminalRef, 
   onTerminalClick,
-  onNavigateHistory 
+  onNavigateHistory, 
 }: TerminalProps) => {
   return (
     <div className="terminal" ref={terminalRef} onClick={(e) => onTerminalClick(e, isLoading)}>

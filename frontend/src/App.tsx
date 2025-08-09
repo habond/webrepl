@@ -20,7 +20,7 @@ function App() {
     hasInitialized,
     createSession,
     deleteSession,
-    renameSession
+    renameSession,
   } = useSessionManager()
   
   // Handle session management - create default session or select most recent session
@@ -42,7 +42,7 @@ function App() {
       } else if (!currentSessionId) {
         // No current session selected - select most recent session
         const mostRecent = sessions.sort(
-          (a, b) => new Date(b.last_accessed).getTime() - new Date(a.last_accessed).getTime()
+          (a, b) => new Date(b.last_accessed).getTime() - new Date(a.last_accessed).getTime(),
         )[0]
         setCurrentSessionId(mostRecent.id)
       } else {
@@ -51,7 +51,7 @@ function App() {
         if (!sessionExists) {
           // Current session was deleted - select most recent session
           const mostRecent = sessions.sort(
-            (a, b) => new Date(b.last_accessed).getTime() - new Date(a.last_accessed).getTime()
+            (a, b) => new Date(b.last_accessed).getTime() - new Date(a.last_accessed).getTime(),
           )[0]
           setCurrentSessionId(mostRecent?.id || undefined)
         }
@@ -72,14 +72,14 @@ function App() {
     clearInput,
     focusInput,
     handleTerminalClick,
-    navigateHistory
+    navigateHistory,
   } = useTerminal(
     currentSessionId || '', 
     sessions.find(s => s.id === currentSessionId)?.language,
     sessions.find(s => s.id === currentSessionId)?.history?.map(entry => ({
       ...entry,
-      timestamp: new Date(entry.timestamp)
-    }))
+      timestamp: new Date(entry.timestamp),
+    })),
   )
 
   const { isLoading, executeCode } = useCodeExecution(currentSessionId || '')

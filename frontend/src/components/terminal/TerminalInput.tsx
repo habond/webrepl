@@ -17,7 +17,7 @@ export const TerminalInput = ({
   selectedLanguage, 
   disabled = false, 
   inputRef,
-  onNavigateHistory 
+  onNavigateHistory, 
 }: TerminalInputProps) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {

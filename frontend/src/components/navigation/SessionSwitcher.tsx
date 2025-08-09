@@ -19,7 +19,7 @@ export const SessionSwitcher = ({
   onDeleteSession,
   onRenameSession,
   onSelectSession,
-  isLoading 
+  isLoading, 
 }: SessionSwitcherProps) => {
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set())
   const [isCreating, setIsCreating] = useState(false)
@@ -283,7 +283,7 @@ export const SessionSwitcher = ({
                         e.stopPropagation()
                         toggleSessionExpanded(session.id)
                       }}
-                      title={isExpanded ? "Show less" : "Show more"}
+                      title={isExpanded ? 'Show less' : 'Show more'}
                     >
                       <svg 
                         width="12" 

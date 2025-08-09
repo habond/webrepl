@@ -20,14 +20,14 @@ export const ERROR_MESSAGES = {
   INVALID_CODE: 'Code cannot be empty',
   SESSION_EXPIRED: 'Session has expired',
   NETWORK_ERROR: 'Network error occurred',
-  UNKNOWN_ERROR: 'An unexpected error occurred'
+  UNKNOWN_ERROR: 'An unexpected error occurred',
 } as const
 
 // Success Messages
 export const SUCCESS_MESSAGES = {
   CODE_EXECUTED: 'Code executed successfully',
   SESSION_RESET: 'Session reset successfully',
-  LANGUAGE_SWITCHED: 'Language switched successfully'
+  LANGUAGE_SWITCHED: 'Language switched successfully',
 } as const
 
 // Theme Configuration
@@ -38,18 +38,18 @@ export const THEME = {
     error: '#ff0040',
     warning: '#ffaa00',
     info: '#00aaff',
-    success: '#00ff00'
+    success: '#00ff00',
   },
   fonts: {
-    monospace: '"Fira Code", "Monaco", "Consolas", monospace'
-  }
+    monospace: '"Fira Code", "Monaco", "Consolas", monospace',
+  },
 } as const
 
 // Development Configuration
 export const DEV_CONFIG = {
   enableDebugLogs: process.env.NODE_ENV === 'development',
   showSessionInfo: process.env.NODE_ENV === 'development',
-  enablePerformanceMetrics: process.env.NODE_ENV === 'development'
+  enablePerformanceMetrics: process.env.NODE_ENV === 'development',
 } as const
 
 // Export types for type safety

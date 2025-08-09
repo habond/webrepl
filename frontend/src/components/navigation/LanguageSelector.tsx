@@ -10,7 +10,7 @@ interface LanguageSelectorProps {
 export const LanguageSelector = ({ 
   selectedLanguage, 
   onLanguageChange, 
-  disabled = false 
+  disabled = false, 
 }: LanguageSelectorProps) => {
   return (
     <div className="language-selector">

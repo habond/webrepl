@@ -6,34 +6,34 @@ export const AVAILABLE_LANGUAGES: Language[] = [
     name: 'Python',
     icon: '🐍',
     prompt: '>>> ', 
-    port: 8000
+    port: 8000,
   },
   { 
     id: 'javascript', 
     name: 'JavaScript',
     icon: '📜',
     prompt: '> ', 
-    port: 8001
+    port: 8001,
   },
   { 
     id: 'ruby', 
     name: 'Ruby',
     icon: '💎',
     prompt: '>> ', 
-    port: 8002
+    port: 8002,
   },
   { 
     id: 'php', 
     name: 'PHP',
     icon: '🐘',
     prompt: 'php > ', 
-    port: 8003
+    port: 8003,
   },
   { 
     id: 'kotlin', 
     name: 'Kotlin',
     icon: '🟣',
     prompt: 'kt > ', 
-    port: 8004
-  }
+    port: 8004,
+  },
 ]

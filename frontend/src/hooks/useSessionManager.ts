@@ -53,7 +53,7 @@ export const useSessionManager = () => {
       
       const requestBody: CreateSessionRequest = {
         ...(name && { name }),
-        ...(language && { language })
+        ...(language && { language }),
       }
       
       const response = await fetch(`${API_BASE}/sessions`, {
@@ -61,7 +61,7 @@ export const useSessionManager = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       })
       
       if (!response.ok) {
@@ -92,7 +92,7 @@ export const useSessionManager = () => {
       setError(null)
       
       const response = await fetch(`${API_BASE}/sessions/${sessionId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
       })
       
       if (!response.ok) {
@@ -146,7 +146,7 @@ export const useSessionManager = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: newName })
+        body: JSON.stringify({ name: newName }),
       })
       
       if (!response.ok) {
@@ -187,6 +187,6 @@ export const useSessionManager = () => {
     deleteSession,
     getSession,
     renameSession,
-    clearError: () => setError(null)
+    clearError: () => setError(null),
   }
 }

@@ -1,2 +1,2 @@
-export * from './terminal';
-export * from './session';
+export * from './terminal'
+export * from './session'

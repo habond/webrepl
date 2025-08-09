@@ -16,7 +16,7 @@ class REPLService {
           'Content-Type': 'application/json',
         },
         body: body ? JSON.stringify(body) : undefined,
-        signal: AbortSignal.timeout(API_TIMEOUT)
+        signal: AbortSignal.timeout(API_TIMEOUT),
       })
       
       const duration = performance.now() - startTime
@@ -37,19 +37,19 @@ class REPLService {
       const response = await this.makeRequest(
         'POST',
         `/${language}/execute/${sessionId}`,
-        { code } as CodeRequest
+        { code } as CodeRequest,
       )
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ 
-          error: ERROR_MESSAGES.UNKNOWN_ERROR 
+          error: ERROR_MESSAGES.UNKNOWN_ERROR, 
         }))
         
-        log.warn(`Code execution failed`, { 
+        log.warn('Code execution failed', { 
           sessionId: sessionId.substring(0, 8),
           language,
           status: response.status,
-          error: errorData.error
+          error: errorData.error,
         })
         
         throw new Error(errorData.error || ERROR_MESSAGES.UNKNOWN_ERROR)
@@ -57,11 +57,11 @@ class REPLService {
 
       const result = await response.json()
       
-      log.session(sessionId, `Code execution completed`, {
+      log.session(sessionId, 'Code execution completed', {
         language,
         hasOutput: !!result.output,
         hasError: !!result.error,
-        executionCount: result.sessionInfo?.execution_count
+        executionCount: result.sessionInfo?.execution_count,
       })
       
       return result
@@ -73,7 +73,7 @@ class REPLService {
       
       log.error('Code execution error', error as Error, { 
         sessionId: sessionId.substring(0, 8),
-        language 
+        language, 
       })
       throw error
     }
@@ -85,23 +85,23 @@ class REPLService {
     try {
       const response = await this.makeRequest(
         'POST',
-        `/${language}/reset/${sessionId}`
+        `/${language}/reset/${sessionId}`,
       )
       
       if (!response.ok) {
         log.warn('Context reset failed', {
           sessionId: sessionId.substring(0, 8),
           language,
-          status: response.status
+          status: response.status,
         })
       } else {
-        log.session(sessionId, `Context reset successful`, { language })
+        log.session(sessionId, 'Context reset successful', { language })
       }
     } catch (error) {
       log.warn('Failed to reset backend state', {
         sessionId: sessionId.substring(0, 8),
         language,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       })
       // Don't throw - reset failures shouldn't block the UI
     }
@@ -110,7 +110,7 @@ class REPLService {
   async getSessionInfo(sessionId: string): Promise<any> {
     try {
       // Try to get session info from any backend (they should be consistent)
-      const response = await this.makeRequest('GET', `/python/sessions`)
+      const response = await this.makeRequest('GET', '/python/sessions')
       
       if (response.ok) {
         const data = await response.json()
@@ -119,7 +119,7 @@ class REPLService {
     } catch (error) {
       log.debug('Failed to get session info', { 
         sessionId: sessionId.substring(0, 8),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       })
     }
     
@@ -140,7 +140,7 @@ class SessionHistoryService {
           'Content-Type': 'application/json',
         },
         body: body ? JSON.stringify(body) : undefined,
-        signal: AbortSignal.timeout(API_TIMEOUT)
+        signal: AbortSignal.timeout(API_TIMEOUT),
       })
       
       return response
@@ -157,9 +157,9 @@ class SessionHistoryService {
       { 
         entry: {
           ...entry,
-          timestamp: entry.timestamp.toISOString()
-        } 
-      }
+          timestamp: entry.timestamp.toISOString(),
+        }, 
+      },
     )
 
     if (!response.ok) {
@@ -180,7 +180,7 @@ class SessionHistoryService {
     const data = await response.json()
     return data.history.map((entry: any) => ({
       ...entry,
-      timestamp: new Date(entry.timestamp)
+      timestamp: new Date(entry.timestamp),
     }))
   }
 }
