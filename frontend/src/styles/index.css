@@ -1,0 +1,51 @@
+/* App-specific global styles */
+
+/* Modern Terminal styles */
+.app-container {
+  height: 100vh;
+  display: flex;
+  background: var(--terminal-bg);
+  color: var(--text-primary);
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Loading indicator animation */
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-indicator {
+  color: var(--text-secondary);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  font-weight: 600;
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border-color);
+  border-top: 2px solid var(--text-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--loading-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}

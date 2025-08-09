@@ -1,0 +1,64 @@
+services:
+  session-manager:
+    build: ./session-manager
+    container_name: webrepl-session-manager
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: production
+    volumes:
+      - session_data:/app/data
+    networks:
+      - webrepl-network
+
+  backend-python:
+    build: ./python
+    container_name: webrepl-backend-python
+    restart: unless-stopped
+    networks:
+      - webrepl-network
+    depends_on:
+      - session-manager
+
+  backend-javascript:
+    build: ./javascript
+    container_name: webrepl-backend-javascript
+    restart: unless-stopped
+    networks:
+      - webrepl-network
+    depends_on:
+      - session-manager
+
+  backend-ruby:
+    build: ./ruby
+    container_name: webrepl-backend-ruby
+    restart: unless-stopped
+    networks:
+      - webrepl-network
+    depends_on:
+      - session-manager
+
+  backend-php:
+    build: ./php
+    container_name: webrepl-backend-php
+    restart: unless-stopped
+    networks:
+      - webrepl-network
+    depends_on:
+      - session-manager
+
+  backend-kotlin:
+    build: ./kotlin
+    container_name: webrepl-backend-kotlin
+    restart: unless-stopped
+    networks:
+      - webrepl-network
+    depends_on:
+      - session-manager
+
+networks:
+  webrepl-network:
+    driver: bridge
+
+volumes:
+  session_data:
+    driver: local

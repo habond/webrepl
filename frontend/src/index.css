@@ -1,0 +1,88 @@
+/* Global CSS reset and base styles */
+* {
+  box-sizing: border-box;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, 
+              transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+:root {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dark theme (default) */
+:root,
+:root[data-theme="dark"] {
+  --bg-primary: #0c0c0c;
+  --bg-secondary: #1a1a2e;
+  --bg-tertiary: #16213e;
+  --text-primary: #e0e6ed;
+  --text-secondary: #94a3b8;
+  --text-accent: #7dd3fc;
+  --border-color: rgba(125, 211, 252, 0.2);
+  --selection-bg: rgba(125, 211, 252, 0.3);
+  --selection-text: #ffffff;
+  --terminal-bg: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+  --loading-overlay: rgba(12, 12, 12, 0.8);
+  --error-color: #fca5a5;
+  --error-bg: rgba(252, 165, 165, 0.1);
+  --success-color: #10b981;
+  --success-bg: rgba(16, 185, 129, 0.1);
+  --accent-bg: rgba(125, 211, 252, 0.1);
+  --accent-bg-hover: rgba(125, 211, 252, 0.2);
+  --accent-border: rgba(125, 211, 252, 0.3);
+}
+
+/* Light theme */
+:root[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #e2e8f0;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-accent: #0369a1;
+  --border-color: rgba(3, 105, 161, 0.3);
+  --selection-bg: rgba(3, 105, 161, 0.2);
+  --selection-text: #1e293b;
+  --terminal-bg: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #e2e8f0 100%);
+  --loading-overlay: rgba(248, 250, 252, 0.9);
+  --error-color: #dc2626;
+  --error-bg: rgba(220, 38, 38, 0.1);
+  --success-color: #059669;
+  --success-bg: rgba(5, 150, 105, 0.1);
+  --accent-bg: rgba(3, 105, 161, 0.1);
+  --accent-bg-hover: rgba(3, 105, 161, 0.2);
+  --accent-border: rgba(3, 105, 161, 0.3);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100vh;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Modern selection styling */
+::selection {
+  background: var(--selection-bg);
+  color: var(--selection-text);
+}
+
+::-moz-selection {
+  background: var(--selection-bg);
+  color: var(--selection-text);
+}

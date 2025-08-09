@@ -1,0 +1,22 @@
+include:
+  - ./backend/docker-compose.yml
+
+services:
+  frontend:
+    build: ./frontend
+    container_name: webrepl-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend-python
+      - backend-javascript
+      - backend-ruby
+      - backend-php
+      - backend-kotlin
+    restart: unless-stopped
+    networks:
+      - webrepl-network
+
+networks:
+  webrepl-network:
+    driver: bridge
