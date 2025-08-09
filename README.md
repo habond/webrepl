@@ -1,5 +1,8 @@
 # Multi-Language Web REPL v2.0
 
+[![CI](https://github.com/habond/webrepl/actions/workflows/ci.yml/badge.svg)](https://github.com/habond/webrepl/actions/workflows/ci.yml)
+[![Docker Build & Publish](https://github.com/habond/webrepl/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/habond/webrepl/actions/workflows/docker-publish.yml)
+
 A containerized web-based REPL (Read-Eval-Print Loop) supporting multiple programming languages through a modern React interface. Execute code in real-time with persistent session management and comprehensive development tooling.
 
 ## 🚀 Features
