@@ -37,7 +37,7 @@
   transform: translateY(-50%) translateX(-50%);
   width: 2px;
   height: 30px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white-overlay);
   border-radius: 1px;
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -58,7 +58,7 @@
   height: 48px;
   position: relative;
   z-index: 1;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px var(--shadow-sm);
 }
 
 .session-title {
@@ -66,11 +66,11 @@
   font-size: 16px;
   font-weight: 600;
   margin: 0;
-  background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 50%, #1e88e5 100%);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 4px var(--shadow-lg);
 }
 
 .create-session-dropdown {
@@ -120,11 +120,11 @@
 }
 
 .create-first-session {
-  background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 100%);
+  background: var(--gradient-secondary);
   border: none;
   border-radius: 8px;
   padding: 8px 16px;
-  color: white;
+  color: var(--selection-text);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -133,7 +133,7 @@
 
 .create-first-session:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(100, 181, 246, 0.3);
+  box-shadow: 0 4px 12px var(--accent-bg-hover);
 }
 
 .create-first-session-dropdown {
@@ -149,7 +149,7 @@
   border: 1px solid var(--border-color);
   border-radius: 8px;
   min-width: 200px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px var(--shadow-sm);
   z-index: 100;
   margin-top: 4px;
   overflow: hidden;
@@ -222,8 +222,8 @@
 }
 
 .session-item:hover {
-  border-color: rgba(125, 211, 252, 0.2);
-  background: rgba(125, 211, 252, 0.05);
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
 }
 
 .session-item.active {
@@ -257,7 +257,7 @@
 }
 
 .session-item:hover .session-language-badge {
-  background: rgba(125, 211, 252, 0.15);
+  background: var(--accent-bg-hover);
   border-color: var(--text-accent);
   transform: scale(1.05);
 }
@@ -265,7 +265,7 @@
 .session-item.active .session-language-badge {
   background: var(--accent-bg-hover);
   border-color: var(--text-accent);
-  box-shadow: 0 0 8px rgba(125, 211, 252, 0.3);
+  box-shadow: 0 0 8px var(--accent-bg-hover);
 }
 
 .session-language-badge .language-icon {
@@ -279,7 +279,7 @@
   flex-direction: column;
 }
 
-.session-name {
+.session-info .session-name {
   display: block;
   color: var(--text-primary);
   font-size: 14px;
@@ -320,7 +320,7 @@
 }
 
 .expand-btn:hover {
-  background: rgba(148, 163, 184, 0.1);
+  background: var(--white-overlay);
   color: var(--text-primary);
 }
 
@@ -330,7 +330,7 @@
 }
 
 .delete-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--error-bg);
   color: var(--error-color);
 }
 
@@ -344,7 +344,7 @@
 
 .session-details {
   padding: 0 12px 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--white-overlay);
   margin-top: 8px;
   padding-top: 8px;
 }
@@ -375,7 +375,7 @@
   font-size: 11px;
 }
 
-.session-name-input {
+.session-info .session-name-input {
   background: var(--accent-bg);
   border: 1px solid var(--accent-border);
   border-radius: 4px;
@@ -389,10 +389,10 @@
   transition: all 0.2s ease;
 }
 
-.session-name-input:focus {
-  background: rgba(125, 211, 252, 0.15);
+.session-info .session-name-input:focus {
+  background: var(--accent-bg-hover);
   border-color: var(--text-accent);
-  box-shadow: 0 0 0 2px rgba(125, 211, 252, 0.1);
+  box-shadow: 0 0 0 2px var(--accent-bg);
 }
 
 /* Session switcher scrollbar */
@@ -401,7 +401,7 @@
 }
 
 .session-list::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white-overlay);
   border-radius: 2px;
 }
 
@@ -411,5 +411,5 @@
 }
 
 .session-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(125, 211, 252, 0.3);
+  background: var(--accent-bg-hover);
 }

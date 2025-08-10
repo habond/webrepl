@@ -13,7 +13,7 @@
 }
 
 .theme-toggle:hover {
-  background: rgba(125, 211, 252, 0.1);
+  background: var(--accent-bg);
   transform: scale(1.05);
 }
 
@@ -45,7 +45,7 @@
   top: 2px;
   left: 2px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 4px var(--shadow-md);
   z-index: 2;
 }
 
@@ -57,7 +57,7 @@
 /* Light theme - sun icon on left, thumb on right */
 :root[data-theme="light"] .theme-toggle-thumb {
   transform: translateX(24px);
-  background: #f59e0b;
+  background: var(--amber-primary);
 }
 
 .theme-icons {
@@ -102,7 +102,7 @@
 /* Hover effects */
 .theme-toggle:hover .theme-toggle-track {
   border-color: var(--text-accent);
-  box-shadow: 0 0 0 2px rgba(125, 211, 252, 0.1);
+  box-shadow: 0 0 0 2px var(--accent-bg);
 }
 
 .theme-toggle:hover .theme-toggle-thumb {
