@@ -9,6 +9,7 @@ import Data.Aeson (FromJSON, ToJSON, encode, decode)
 import GHC.Generics
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text as T
+import qualified Data.ByteString.Char8 as BS
 import Data.IORef
 import qualified Data.Map as Map
 import Control.Monad.IO.Class (liftIO)
@@ -68,7 +69,14 @@ errorString (GhcException s) = "GHC exception: " ++ s
 main :: IO ()
 main = do
   env <- lookupEnv "ENVIRONMENT"
-  let isDev = fromMaybe "development" env == "development"
+  backendPortStr <- lookupEnv "BACKEND_PORT"
+  corsOriginsEnv <- lookupEnv "CORS_ORIGINS"
+  
+  let environment = fromMaybe "development" env
+  let backendPort = maybe 8000 read backendPortStr
+  let corsOrigins = fromMaybe "http://localhost:8080" corsOriginsEnv
+  
+  let isDev = environment == "development"
   let corsPolicy = if isDev
         then simpleCorsResourcePolicy
           { corsOrigins = Nothing
@@ -76,14 +84,14 @@ main = do
           , corsRequestHeaders = ["Content-Type"]
           }
         else simpleCorsResourcePolicy
-          { corsOrigins = Just (["http://localhost:8080"], True)
+          { corsOrigins = Just ([BS.pack corsOrigins], True)
           , corsMethods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
           , corsRequestHeaders = ["Content-Type"]
           }
   
   sessionsRef <- newIORef Map.empty
   
-  scotty 8000 $ do
+  scotty backendPort $ do
     middleware $ cors (const $ Just corsPolicy)
     
     S.get "/health" $ do

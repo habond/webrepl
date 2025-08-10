@@ -1,0 +1,86 @@
+server {
+    listen 80;
+    server_name localhost;
+    root /usr/share/nginx/html;
+    index index.html;
+    
+    # Docker DNS resolver
+    resolver 127.0.0.11 valid=30s;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Session Manager proxy routes
+    location ~ ^/api/session-manager/(.*)$ {
+        proxy_pass http://${SESSION_MANAGER_HOST}:${BACKEND_PORT}/$1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ~ ^/api/sessions/(.*)$ {
+        proxy_pass http://${SESSION_MANAGER_HOST}:${BACKEND_PORT}/sessions/$1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /api/sessions {
+        proxy_pass http://${SESSION_MANAGER_HOST}:${BACKEND_PORT}/sessions;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ~ ^/api/python/(.*)$ {
+        proxy_pass http://${PYTHON_BACKEND_HOST}:${BACKEND_PORT}/$1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ~ ^/api/javascript/(.*)$ {
+        proxy_pass http://${JAVASCRIPT_BACKEND_HOST}:${BACKEND_PORT}/$1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ~ ^/api/ruby/(.*)$ {
+        proxy_pass http://${RUBY_BACKEND_HOST}:${BACKEND_PORT}/$1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ~ ^/api/php/(.*)$ {
+        proxy_pass http://${PHP_BACKEND_HOST}:${BACKEND_PORT}/$1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ~ ^/api/kotlin/(.*)$ {
+        proxy_pass http://${KOTLIN_BACKEND_HOST}:${BACKEND_PORT}/$1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ~ ^/api/haskell/(.*)$ {
+        proxy_pass http://${HASKELL_BACKEND_HOST}:${BACKEND_PORT}/$1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

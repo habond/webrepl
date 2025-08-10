@@ -8,6 +8,7 @@ executable haskell-repl
                     , scotty
                     , aeson
                     , text
+                    , bytestring
                     , containers
                     , http-types
                     , wai-cors

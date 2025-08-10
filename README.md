@@ -10,19 +10,20 @@ A containerized web-based REPL (Read-Eval-Print Loop) supporting multiple progra
 - **Multi-Language Support**: Python, JavaScript, Ruby, PHP, Kotlin, and Haskell backends
 - **Modern Terminal Interface**: React-based terminal with real-time code execution
 - **Session Management**: Persistent execution environments with automatic cleanup
-- **Container Architecture**: Fully containerized with Docker Compose orchestration
+- **Container Architecture**: Fully containerized with Docker Compose orchestration  
+- **Environment Configuration**: Comprehensive `.env` file configuration for flexible deployment
 - **Development Ready**: Hot reloading, structured logging, and comprehensive testing
 
 ## 📋 Supported Languages
 
-| Language   | Backend Technology | Container Port |
-|------------|-------------------|----------------|
-| Python     | FastAPI           | 8000          |
-| JavaScript | Express.js        | 8000          |
-| Ruby       | Sinatra           | 8000          |
-| PHP        | Built-in Server   | 8000          |
-| Kotlin     | Ktor              | 8000          |
-| Haskell    | Scotty            | 8000          |
+| Language   | Backend Technology | Default Port | Configurable |
+|------------|-------------------|--------------|--------------|
+| Python     | FastAPI           | 8000         | ✅ `BACKEND_PORT` |
+| JavaScript | Express.js        | 8000         | ✅ `BACKEND_PORT` |
+| Ruby       | Sinatra           | 8000         | ✅ `BACKEND_PORT` |
+| PHP        | Built-in Server   | 8000         | ✅ `BACKEND_PORT` |
+| Kotlin     | Ktor              | 8000         | ✅ `BACKEND_PORT` |
+| Haskell    | Scotty            | 8000         | ✅ `BACKEND_PORT` |
 
 ## 🏃‍♂️ Quick Start
 
@@ -43,6 +44,73 @@ A containerized web-based REPL (Read-Eval-Print Loop) supporting multiple progra
 ```
 
 Access the application at: http://localhost:8080
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+The application supports comprehensive configuration through environment variables. Default settings are provided in the `.env` file, with an example template in `.env.example`.
+
+#### Core Settings
+
+```bash
+# Application Ports
+FRONTEND_PORT=8080              # Frontend nginx port  
+BACKEND_PORT=8000               # All backend services port
+VITE_DEV_PORT=5173             # Vite development server port
+
+# Environment & Security
+ENVIRONMENT=development         # development|production
+CORS_ORIGINS=http://localhost:8080  # Comma-separated allowed origins
+```
+
+#### Service URLs
+
+```bash
+# Session Manager
+SESSION_MANAGER_URL=http://session-manager:8000
+
+# Language Backends
+PYTHON_BACKEND_URL=http://backend-python:8000
+JAVASCRIPT_BACKEND_URL=http://backend-javascript:8000  
+RUBY_BACKEND_URL=http://backend-ruby:8000
+PHP_BACKEND_URL=http://backend-php:8000
+KOTLIN_BACKEND_URL=http://backend-kotlin:8000
+HASKELL_BACKEND_URL=http://backend-haskell:8000
+```
+
+#### Frontend Configuration
+
+```bash
+# Vite Environment Variables (prefixed with VITE_)
+VITE_SESSION_REFRESH_INTERVAL=30000  # Session refresh rate (ms)
+VITE_BACKEND_PORT=8000               # Backend port for display
+```
+
+#### Custom Deployment Example
+
+```bash
+# Production deployment on different ports
+FRONTEND_PORT=3000
+BACKEND_PORT=9000
+ENVIRONMENT=production
+CORS_ORIGINS=https://myapp.com,https://api.myapp.com
+
+# External service integration
+SESSION_MANAGER_URL=http://external-session-service:9000
+DATABASE_PATH=/mnt/persistent/sessions.db
+```
+
+**Getting Started with Configuration:**
+```bash
+# Use the provided defaults (recommended for development)
+./control.sh start
+
+# Or create custom configuration
+cp .env.example .env.local
+# Edit .env.local with your custom settings
+./control.sh restart
+```
 
 ### Manual Docker Commands
 

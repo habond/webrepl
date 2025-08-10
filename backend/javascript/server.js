@@ -5,18 +5,20 @@ const axios = require('axios')
 const { ErrorHandler, ErrorType } = require('./errorHandler')
 
 const app = express()
-const port = 8000
+const port = parseInt(process.env.BACKEND_PORT || '8000')
 
 // Session Manager URL
-const SESSION_MANAGER_URL = 'http://session-manager:8000'
+const SESSION_MANAGER_URL = process.env.SESSION_MANAGER_URL || 'http://session-manager:8000'
 
 // Configure logging
 console.log('Starting JavaScript REPL API v2.0.0...')
 
 // CORS configuration - allow all origins in development
-const corsOrigins = process.env.ENVIRONMENT === 'production' 
-  ? ['http://localhost:8080'] 
-  : ['*']
+const environment = process.env.ENVIRONMENT || 'development'
+const corsOriginsEnv = process.env.CORS_ORIGINS || 'http://localhost:8080'
+const corsOrigins = environment === 'development' 
+  ? ['*'] 
+  : corsOriginsEnv.split(',')
 
 app.use(cors({
   origin: corsOrigins
@@ -331,6 +333,9 @@ app.post('/reset/:sessionId', async (req, res) => {
 // Start server
 app.listen(port, '0.0.0.0', () => {
   console.log(`JavaScript REPL backend v2.0.0 running on port ${port}`)
+  console.log(`Environment: ${environment}`)
+  console.log(`Session Manager URL: ${SESSION_MANAGER_URL}`)
+  console.log(`CORS Origins: ${corsOrigins}`)
 })
 
 // Graceful shutdown

@@ -72,11 +72,12 @@ class SessionInfo(BaseModel):
 
 # Language backend endpoints
 LANGUAGE_BACKENDS = {
-    "python": "http://backend-python:8000",
-    "javascript": "http://backend-javascript:8000", 
-    "ruby": "http://backend-ruby:8000",
-    "php": "http://backend-php:8000",
-    "kotlin": "http://backend-kotlin:8000"
+    "python": os.getenv("PYTHON_BACKEND_URL", "http://backend-python:8000"),
+    "javascript": os.getenv("JAVASCRIPT_BACKEND_URL", "http://backend-javascript:8000"), 
+    "ruby": os.getenv("RUBY_BACKEND_URL", "http://backend-ruby:8000"),
+    "php": os.getenv("PHP_BACKEND_URL", "http://backend-php:8000"),
+    "kotlin": os.getenv("KOTLIN_BACKEND_URL", "http://backend-kotlin:8000"),
+    "haskell": os.getenv("HASKELL_BACKEND_URL", "http://backend-haskell:8000")
 }
 
 @asynccontextmanager
@@ -97,10 +98,11 @@ app = FastAPI(
 
 # CORS configuration
 environment = os.getenv("ENVIRONMENT", "development")
+cors_origins_env = os.getenv("CORS_ORIGINS", "http://localhost:8080")
 if environment == "development":
     allowed_origins = ["*"]
 else:
-    allowed_origins = ["http://localhost:8080"]
+    allowed_origins = cors_origins_env.split(",")
 
 app.add_middleware(
     CORSMiddleware,
@@ -460,4 +462,5 @@ async def clear_session_environment(session_id: str, db: DBSession = Depends(get
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    backend_port = int(os.getenv("BACKEND_PORT", "8000"))
+    uvicorn.run(app, host="0.0.0.0", port=backend_port)

@@ -1,46 +1,49 @@
 import type { Language } from '@/types'
 
+// Default backend port (used for display purposes only, actual routing via nginx proxy)
+const DEFAULT_BACKEND_PORT = parseInt(import.meta.env.VITE_BACKEND_PORT || '8000')
+
 export const AVAILABLE_LANGUAGES: Language[] = [
   { 
     id: 'python', 
     name: 'Python',
     icon: '🐍',
     prompt: '>>> ', 
-    port: 8000,
+    port: DEFAULT_BACKEND_PORT,
   },
   { 
     id: 'javascript', 
     name: 'JavaScript',
     icon: '📜',
     prompt: '> ', 
-    port: 8001,
+    port: DEFAULT_BACKEND_PORT,
   },
   { 
     id: 'ruby', 
     name: 'Ruby',
     icon: '💎',
     prompt: '>> ', 
-    port: 8002,
+    port: DEFAULT_BACKEND_PORT,
   },
   { 
     id: 'php', 
     name: 'PHP',
     icon: '🐘',
     prompt: 'php > ', 
-    port: 8003,
+    port: DEFAULT_BACKEND_PORT,
   },
   { 
     id: 'kotlin', 
     name: 'Kotlin',
     icon: '🟣',
     prompt: 'kt > ', 
-    port: 8004,
+    port: DEFAULT_BACKEND_PORT,
   },
   { 
     id: 'haskell', 
     name: 'Haskell',
     icon: 'λ',
     prompt: 'λ> ', 
-    port: 8005,
+    port: DEFAULT_BACKEND_PORT,
   },
 ]

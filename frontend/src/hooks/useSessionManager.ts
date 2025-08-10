@@ -172,8 +172,9 @@ export const useSessionManager = () => {
     // Initial load
     fetchSessions(true)
     
-    // Refresh sessions every 30 seconds
-    const interval = setInterval(() => fetchSessions(false), 30000)
+    // Refresh sessions every configured interval (default 30 seconds)
+    const refreshInterval = parseInt(import.meta.env.VITE_SESSION_REFRESH_INTERVAL || '30000')
+    const interval = setInterval(() => fetchSessions(false), refreshInterval)
     return () => clearInterval(interval)
   }, [fetchSessions])
 

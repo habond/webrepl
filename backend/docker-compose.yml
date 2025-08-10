@@ -4,7 +4,10 @@ services:
     container_name: webrepl-session-manager
     restart: unless-stopped
     environment:
-      ENVIRONMENT: production
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - BACKEND_PORT=${BACKEND_PORT:-8000}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080}
+      - DATABASE_PATH=${DATABASE_PATH:-./data/sessions.db}
     volumes:
       - session_data:/app/data
     networks:
@@ -14,6 +17,11 @@ services:
     build: ./python
     container_name: webrepl-backend-python
     restart: unless-stopped
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - BACKEND_PORT=${BACKEND_PORT:-8000}
+      - SESSION_MANAGER_URL=${SESSION_MANAGER_URL:-http://session-manager:8000}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080}
     networks:
       - webrepl-network
     depends_on:
@@ -23,6 +31,11 @@ services:
     build: ./javascript
     container_name: webrepl-backend-javascript
     restart: unless-stopped
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - BACKEND_PORT=${BACKEND_PORT:-8000}
+      - SESSION_MANAGER_URL=${SESSION_MANAGER_URL:-http://session-manager:8000}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080}
     networks:
       - webrepl-network
     depends_on:
@@ -32,6 +45,11 @@ services:
     build: ./ruby
     container_name: webrepl-backend-ruby
     restart: unless-stopped
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - BACKEND_PORT=${BACKEND_PORT:-8000}
+      - SESSION_MANAGER_URL=${SESSION_MANAGER_URL:-http://session-manager:8000}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080}
     networks:
       - webrepl-network
     depends_on:
@@ -41,6 +59,11 @@ services:
     build: ./php
     container_name: webrepl-backend-php
     restart: unless-stopped
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - BACKEND_PORT=${BACKEND_PORT:-8000}
+      - SESSION_MANAGER_URL=${SESSION_MANAGER_URL:-http://session-manager:8000}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080}
     networks:
       - webrepl-network
     depends_on:
@@ -50,6 +73,11 @@ services:
     build: ./kotlin
     container_name: webrepl-backend-kotlin
     restart: unless-stopped
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - BACKEND_PORT=${BACKEND_PORT:-8000}
+      - SESSION_MANAGER_URL=${SESSION_MANAGER_URL:-http://session-manager:8000}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080}
     networks:
       - webrepl-network
     depends_on:
@@ -59,6 +87,11 @@ services:
     build: ./haskell
     container_name: webrepl-backend-haskell
     restart: unless-stopped
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - BACKEND_PORT=${BACKEND_PORT:-8000}
+      - SESSION_MANAGER_URL=${SESSION_MANAGER_URL:-http://session-manager:8000}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080}
     networks:
       - webrepl-network
     depends_on:

@@ -28,7 +28,7 @@ app = FastAPI(
 )
 
 # Session Manager URL
-SESSION_MANAGER_URL = "http://session-manager:8000"
+SESSION_MANAGER_URL = os.getenv("SESSION_MANAGER_URL", "http://session-manager:8000")
 
 async def serialize_namespace(namespace: Dict[str, Any]) -> str:
     """Serialize a Python namespace to base64-encoded string"""
@@ -163,7 +163,9 @@ async def notify_session_manager(session_id: str):
         logger.warning(f"Failed to notify session manager: {e}")
 
 # CORS configuration - allow all origins in development
-cors_origins = ["*"] if os.getenv("ENVIRONMENT", "development") == "development" else ["http://localhost:8080"]
+environment = os.getenv("ENVIRONMENT", "development")
+cors_origins_env = os.getenv("CORS_ORIGINS", "http://localhost:8080")
+cors_origins = ["*"] if environment == "development" else cors_origins_env.split(",")
 
 app.add_middleware(
     CORSMiddleware,
@@ -318,9 +320,10 @@ if __name__ == "__main__":
     import uvicorn
 
     logger.info("Starting Python REPL API v2.0.0...")
+    backend_port = int(os.getenv("BACKEND_PORT", "8000"))
     uvicorn.run(
         app, 
         host="0.0.0.0", 
-        port=8000,
+        port=backend_port,
         log_level="info"
     )

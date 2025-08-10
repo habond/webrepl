@@ -117,6 +117,97 @@ The easiest way to run the application is using the control script:
 
 Access at: http://localhost:8080
 
+## Environment Variables Configuration
+
+The application supports comprehensive environment variable configuration for flexible deployment across different environments. All settings are configured via the `.env` file in the project root.
+
+### Available Environment Variables
+
+**Core Application Settings:**
+```bash
+# Application ports
+FRONTEND_PORT=8080              # Frontend nginx port
+BACKEND_PORT=8000               # All backend services port
+VITE_DEV_PORT=5173             # Vite development server port
+
+# Environment and CORS
+ENVIRONMENT=development         # development|production
+CORS_ORIGINS=http://localhost:8080  # Comma-separated CORS origins
+```
+
+**Service Communication URLs:**
+```bash
+# Session Manager
+SESSION_MANAGER_URL=http://session-manager:8000
+
+# Language Backend URLs
+PYTHON_BACKEND_URL=http://backend-python:8000
+JAVASCRIPT_BACKEND_URL=http://backend-javascript:8000
+RUBY_BACKEND_URL=http://backend-ruby:8000
+PHP_BACKEND_URL=http://backend-php:8000
+KOTLIN_BACKEND_URL=http://backend-kotlin:8000
+HASKELL_BACKEND_URL=http://backend-haskell:8000
+```
+
+**Container Hostnames:**
+```bash
+# Used by nginx proxy configuration
+SESSION_MANAGER_HOST=session-manager
+PYTHON_BACKEND_HOST=backend-python
+JAVASCRIPT_BACKEND_HOST=backend-javascript
+RUBY_BACKEND_HOST=backend-ruby
+PHP_BACKEND_HOST=backend-php
+KOTLIN_BACKEND_HOST=backend-kotlin
+HASKELL_BACKEND_HOST=backend-haskell
+```
+
+**Frontend Configuration (Vite):**
+```bash
+# Frontend-specific variables (prefixed with VITE_)
+VITE_SESSION_REFRESH_INTERVAL=30000  # Session refresh interval in milliseconds
+VITE_BACKEND_PORT=8000               # Backend port for display purposes
+```
+
+**Database Configuration:**
+```bash
+DATABASE_PATH=./data/sessions.db     # SQLite database file path
+```
+
+### Environment Variable Usage
+
+**Development Mode:**
+- `ENVIRONMENT=development` enables CORS for all origins (`["*"]`)
+- Detailed logging and error reporting
+- Hot reloading for frontend development
+
+**Production Mode:**
+- `ENVIRONMENT=production` restricts CORS to specified origins
+- Optimized builds and reduced logging
+- Security hardening enabled
+
+### Customizing Deployment
+
+To customize the application for your environment, modify the `.env` file:
+
+```bash
+# Example: Production deployment on different ports
+FRONTEND_PORT=3000
+BACKEND_PORT=9000
+ENVIRONMENT=production
+CORS_ORIGINS=https://myapp.com,https://www.myapp.com
+
+# Example: Point to external services
+SESSION_MANAGER_URL=http://external-session-manager:9000
+DATABASE_PATH=/mnt/data/sessions.db
+```
+
+**Docker Compose Integration:**
+Environment variables are automatically passed to all containers with sensible defaults. No code changes required - just update the `.env` file and restart:
+
+```bash
+./control.sh restart
+```
+
 ### Alternative Docker Commands
 
 You can also use Docker Compose directly if needed:
@@ -302,17 +393,20 @@ Rename a session.
 - **Monitoring**: Built-in session statistics and performance metrics
 
 ### Configuration Approach
+- **Environment Variables**: Comprehensive `.env` file configuration for all application settings
 - **TypeScript**: Single consolidated `tsconfig.json` (no project references)
 - **Code Quality**: ESLint handles all formatting and linting (no separate Prettier)
-- **CORS**: Environment-based configuration for flexible development
+- **CORS**: Environment-based configuration for flexible development (`ENVIRONMENT` and `CORS_ORIGINS` variables)
 - **Build Optimization**: Comprehensive `.dockerignore` files for faster builds
 - **Logging**: Structured logging with configurable levels and context tracking
+- **Container Configuration**: All services respect environment variables with sensible defaults
 
 ### CORS Configuration
 Backend uses environment-based CORS configuration:
 - **Development**: `ENVIRONMENT=development` (default) → allows all origins (`["*"]`)
-- **Production**: Any other value → restricts to `["http://localhost:8080"]`
-- Set via environment variable, no code changes needed for new development ports
+- **Production**: `ENVIRONMENT=production` → restricts to origins specified in `CORS_ORIGINS`
+- **Flexible Origins**: `CORS_ORIGINS` supports comma-separated list of allowed origins
+- Set via environment variables, no code changes needed for different deployment environments
 
 ### Error Handling
 - Frontend network errors → "Failed to connect to server"

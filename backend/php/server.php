@@ -8,14 +8,16 @@ ini_set('display_errors', 0);
 error_reporting(0);
 
 // Configuration
-$port = 8000;
+$port = intval($_ENV['BACKEND_PORT'] ?? '8000');
 $host = '0.0.0.0';
-$sessionManagerUrl = 'http://session-manager:8000';
+$sessionManagerUrl = $_ENV['SESSION_MANAGER_URL'] ?? 'http://session-manager:8000';
 
 // CORS configuration
-$corsOrigins = $_ENV['ENVIRONMENT'] === 'production' 
-    ? ['http://localhost:8080'] 
-    : ['*'];
+$environment = $_ENV['ENVIRONMENT'] ?? 'development';
+$corsOriginsEnv = $_ENV['CORS_ORIGINS'] ?? 'http://localhost:8080';
+$corsOrigins = $environment === 'development' 
+    ? ['*'] 
+    : explode(',', $corsOriginsEnv);
 
 // Error handling functions
 class ErrorHandler {

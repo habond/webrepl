@@ -24,7 +24,7 @@ import javax.script.ScriptEngineManager
 import javax.script.SimpleBindings
 
 private val logger = LoggerFactory.getLogger("KotlinREPL")
-const val SESSION_MANAGER_URL = "http://session-manager:8000"
+val SESSION_MANAGER_URL = System.getenv("SESSION_MANAGER_URL") ?: "http://session-manager:8000"
 
 class KotlinREPLServer {
     private val httpClient = HttpClient(CIO)
@@ -212,10 +212,17 @@ class KotlinREPLServer {
 fun main() {
     logger.info("Starting Kotlin REPL API v2.0.0...")
     
-    embeddedServer(Netty, port = 8000, host = "0.0.0.0") {
+    val backendPort = System.getenv("BACKEND_PORT")?.toIntOrNull() ?: 8000
+    val environment = System.getenv("ENVIRONMENT") ?: "development"
+    val corsOriginsEnv = System.getenv("CORS_ORIGINS") ?: "http://localhost:8080"
+    
+    embeddedServer(Netty, port = backendPort, host = "0.0.0.0") {
         install(CORS) {
-            if (System.getenv("ENVIRONMENT") == "production") {
-                allowHost("localhost:8080")
+            if (environment == "production") {
+                corsOriginsEnv.split(",").forEach { origin ->
+                    val parts = origin.replace("http://", "").replace("https://", "")
+                    allowHost(parts)
+                }
             } else {
                 anyHost()
             }

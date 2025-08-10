@@ -8,16 +8,20 @@ require 'uri'
 
 # Configure Sinatra
 set :bind, '0.0.0.0'
-set :port, 8000
+set :port, (ENV['BACKEND_PORT'] || '8000').to_i
 
 # Configure CORS
-set :allow_origin, "*"
+environment = ENV['ENVIRONMENT'] || 'development'
+cors_origins_env = ENV['CORS_ORIGINS'] || 'http://localhost:8080'
+cors_origins = environment == 'development' ? '*' : cors_origins_env
+
+set :allow_origin, cors_origins
 set :allow_methods, "GET,HEAD,POST,OPTIONS"
 set :allow_headers, "content-type,if-modified-since"
 set :expose_headers, "location,link"
 
 # Session Manager URL
-SESSION_MANAGER_URL = 'http://session-manager:8000'
+SESSION_MANAGER_URL = ENV['SESSION_MANAGER_URL'] || 'http://session-manager:8000'
 
 # Ruby environment serialization functions
 def serialize_binding(binding_obj)
