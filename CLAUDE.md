@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Multi-Language Web REPL v2.0
 
-A containerized web-based REPL with React frontend supporting multiple programming languages. Features a terminal-like interface for executing stateful code in Python, JavaScript, Ruby, PHP, and Kotlin with advanced session management, automatic cleanup, structured logging, and comprehensive development tooling.
+A containerized web-based REPL with React frontend supporting multiple programming languages. Features a terminal-like interface for executing stateful code in Python, JavaScript, Ruby, PHP, Kotlin, and Haskell with advanced session management, automatic cleanup, structured logging, and comprehensive development tooling.
 
 ## Core Architecture
 
@@ -36,6 +36,11 @@ Each supported language runs as a separate containerized backend:
 - Session-based persistent variable bindings using serialized contexts
 - Container: `webrepl-backend-kotlin` on port 8000
 
+**Haskell Backend** (`backend/haskell/`):
+- Scotty web framework with Haskell Interpreter (hint) for safe evaluation
+- Session-based code execution with GHC runtime
+- Container: `webrepl-backend-haskell` on port 8000
+
 **Session Manager** (`backend/session-manager/`):
 - FastAPI service with SQLite database for session persistence
 - Centralized session CRUD operations and metadata management
@@ -63,6 +68,7 @@ Frontend → nginx proxy (/api/{language}/*) → Language-specific backend conta
 - `/api/ruby/execute/{sessionId}` → `backend-ruby:8000/execute/{sessionId}`
 - `/api/php/execute/{sessionId}` → `backend-php:8000/execute/{sessionId}`
 - `/api/kotlin/execute/{sessionId}` → `backend-kotlin:8000/execute/{sessionId}`
+- `/api/haskell/execute/{sessionId}` → `backend-haskell:8000/execute/{sessionId}`
 - `/api/{language}/reset/{sessionId}` → `backend-{language}:8000/reset/{sessionId}`
 - `/api/sessions/*` → `session-manager:8000/*` (session management endpoints)
 
@@ -76,6 +82,7 @@ nginx uses regex patterns to capture and forward the full path including session
 - **Ruby Backend**: Ruby 3.1-slim with Sinatra (`webrepl-backend-ruby`)
 - **PHP Backend**: PHP 8.2-cli with built-in server (`webrepl-backend-php`)
 - **Kotlin Backend**: OpenJDK 17 with Ktor server (`webrepl-backend-kotlin`)
+- **Haskell Backend**: Haskell 9.4 with Scotty server (`webrepl-backend-haskell`)
 - **Network**: Bridge network `webrepl-network` for inter-container communication
 - **Persistence**: Session metadata and terminal history stored in SQLite. Language execution environments persist in backend memory until restart.
 - **Orchestration**: Two docker-compose files - main project and backend-only for testing
@@ -131,6 +138,7 @@ webrepl/
 │   ├── ruby/         # Ruby Sinatra backend
 │   ├── php/          # PHP built-in server backend
 │   ├── kotlin/       # Kotlin Ktor server backend
+│   ├── haskell/      # Haskell Scotty server backend
 │   └── docker-compose.yml # Backend-only orchestration
 ├── docker-compose.yml # Main project orchestration
 └── control.sh        # Application control script (start/stop/restart/status/logs)
@@ -244,7 +252,7 @@ Clear the execution state for the specified language and session.
 **Response**: `{"message": "Namespace reset successfully"}`
 
 **Parameters**:
-- `{language}`: One of `python`, `javascript`, `ruby`, `php`, `kotlin`
+- `{language}`: One of `python`, `javascript`, `ruby`, `php`, `kotlin`, `haskell`
 - `{sessionId}`: UUID string identifying the user session
 
 **Session Isolation**: Each session maintains completely separate execution environments. Variables, imports, and state are isolated between different session IDs.
@@ -324,7 +332,7 @@ Critical: nginx config at `frontend/nginx.conf` routes `/api/{language}/` to `ba
 
 ## Security Considerations
 
-This application executes arbitrary code (Python, JavaScript, Ruby, PHP, Kotlin) in sandboxed container environments. Each backend container has no network access to external services and limited filesystem access. Never expose this to untrusted networks without additional security measures.
+This application executes arbitrary code (Python, JavaScript, Ruby, PHP, Kotlin, Haskell) in sandboxed container environments. Each backend container has no network access to external services and limited filesystem access. Never expose this to untrusted networks without additional security measures.
 
 ## Component-Specific Documentation
 
@@ -334,6 +342,7 @@ This application executes arbitrary code (Python, JavaScript, Ruby, PHP, Kotlin)
 - Ruby backend implementation details: `backend/ruby/CLAUDE.md`
 - PHP backend implementation details: `backend/php/CLAUDE.md`
 - Kotlin backend implementation details: `backend/kotlin/CLAUDE.md`
+- Haskell backend implementation details: `backend/haskell/CLAUDE.md`
 - Frontend implementation details: `frontend/CLAUDE.md`
 
 # Frontend Architecture Deep Dive

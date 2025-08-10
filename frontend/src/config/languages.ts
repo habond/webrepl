@@ -36,4 +36,11 @@ export const AVAILABLE_LANGUAGES: Language[] = [
     prompt: 'kt > ', 
     port: 8004,
   },
+  { 
+    id: 'haskell', 
+    name: 'Haskell',
+    icon: 'λ',
+    prompt: 'λ> ', 
+    port: 8005,
+  },
 ]

@@ -7,7 +7,7 @@ A containerized web-based REPL (Read-Eval-Print Loop) supporting multiple progra
 
 ## 🚀 Features
 
-- **Multi-Language Support**: Python, JavaScript, Ruby, PHP, and Kotlin backends
+- **Multi-Language Support**: Python, JavaScript, Ruby, PHP, Kotlin, and Haskell backends
 - **Modern Terminal Interface**: React-based terminal with real-time code execution
 - **Session Management**: Persistent execution environments with automatic cleanup
 - **Container Architecture**: Fully containerized with Docker Compose orchestration
@@ -22,6 +22,7 @@ A containerized web-based REPL (Read-Eval-Print Loop) supporting multiple progra
 | Ruby       | Sinatra           | 8000          |
 | PHP        | Built-in Server   | 8000          |
 | Kotlin     | Ktor              | 8000          |
+| Haskell    | Scotty            | 8000          |
 
 ## 🏃‍♂️ Quick Start
 
@@ -67,6 +68,7 @@ curl http://localhost:8080/api/javascript/health
 curl http://localhost:8080/api/ruby/health
 curl http://localhost:8080/api/php/health
 curl http://localhost:8080/api/kotlin/health
+curl http://localhost:8080/api/haskell/health
 
 # Test session manager
 curl http://localhost:8080/api/sessions
@@ -132,6 +134,7 @@ webrepl/
 │   ├── ruby/          # Ruby Sinatra backend
 │   ├── php/           # PHP backend
 │   ├── kotlin/        # Kotlin Ktor backend
+│   ├── haskell/       # Haskell Scotty backend
 │   └── session-manager/ # Session persistence
 ├── docker-compose.yml # Main orchestration
 └── control.sh        # Application control script
@@ -160,6 +163,7 @@ This application executes arbitrary code in sandboxed Docker containers. Each ba
 - [Ruby Backend](backend/ruby/CLAUDE.md)
 - [PHP Backend](backend/php/CLAUDE.md)
 - [Kotlin Backend](backend/kotlin/CLAUDE.md)
+- [Haskell Backend](backend/haskell/CLAUDE.md)
 
 ## 🤝 Contributing
 

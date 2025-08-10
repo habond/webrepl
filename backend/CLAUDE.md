@@ -67,6 +67,13 @@ The session manager provides:
 - **Container**: `webrepl-backend-kotlin`
 - **Documentation**: `backend/kotlin/CLAUDE.md`
 
+### Haskell (`/backend/haskell/`)
+- **Framework**: Scotty web framework with Haskell Interpreter (hint)
+- **Features**: Session-based code execution with GHC runtime evaluation
+- **Port**: 8000 (container internal)
+- **Container**: `webrepl-backend-haskell`
+- **Documentation**: `backend/haskell/CLAUDE.md`
+
 ## Session Architecture
 
 ### Session Isolation
@@ -92,6 +99,7 @@ Frontend → nginx proxy (/api/{language}/*) → Language-specific backend conta
 - `/api/ruby/execute/{sessionId}` → `backend-ruby:8000/execute/{sessionId}`
 - `/api/php/execute/{sessionId}` → `backend-php:8000/execute/{sessionId}`
 - `/api/kotlin/execute/{sessionId}` → `backend-kotlin:8000/execute/{sessionId}`
+- `/api/haskell/execute/{sessionId}` → `backend-haskell:8000/execute/{sessionId}`
 - `/api/{language}/reset/{sessionId}` → `backend-{language}:8000/reset/{sessionId}`
 - `/api/sessions/*` → `session-manager:8000/sessions/*` (session management endpoints)
 

@@ -13,6 +13,7 @@ services:
       - backend-ruby
       - backend-php
       - backend-kotlin
+      - backend-haskell
     restart: unless-stopped
     networks:
       - webrepl-network

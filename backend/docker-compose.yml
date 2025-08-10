@@ -55,6 +55,15 @@ services:
     depends_on:
       - session-manager
 
+  backend-haskell:
+    build: ./haskell
+    container_name: webrepl-backend-haskell
+    restart: unless-stopped
+    networks:
+      - webrepl-network
+    depends_on:
+      - session-manager
+
 networks:
   webrepl-network:
     driver: bridge
