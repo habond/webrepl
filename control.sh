@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # WebREPL Control Script
-# Usage: ./control [start|stop|restart|status|logs|help]
+# Usage: ./control [start|stop|restart|status|logs|help] [service]
 
 set -e
 
@@ -15,6 +15,17 @@ NC='\033[0m' # No Color
 # Application details
 APP_NAME="WebREPL"
 APP_URL="http://localhost:8080"
+
+# Available services
+AVAILABLE_SERVICES=(
+    "frontend"
+    "session-manager" 
+    "backend-python"
+    "backend-javascript"
+    "backend-ruby"
+    "backend-php"
+    "backend-kotlin"
+)
 
 # Docker Compose detection
 detect_docker_compose() {
@@ -41,43 +52,77 @@ check_dependencies() {
     fi
 }
 
+# Validate service name
+validate_service() {
+    local service="$1"
+    if [ -n "$service" ]; then
+        for valid_service in "${AVAILABLE_SERVICES[@]}"; do
+            if [ "$service" = "$valid_service" ]; then
+                return 0
+            fi
+        done
+        echo -e "${RED}Error: Invalid service '$service'${NC}"
+        echo "Available services: ${AVAILABLE_SERVICES[*]}"
+        exit 1
+    fi
+}
+
 # Show usage information
 show_help() {
     echo -e "${BLUE}WebREPL Control Script${NC}"
     echo ""
-    echo "Usage: ./control [COMMAND]"
+    echo "Usage: ./control [COMMAND] [SERVICE]"
     echo ""
     echo "Commands:"
-    echo "  start     Start the WebREPL application"
-    echo "  stop      Stop the WebREPL application"
+    echo "  start     Start the WebREPL application (or specific service)"
+    echo "  stop      Stop the WebREPL application (or specific service)"
     echo "  restart   Restart the WebREPL application (rebuild and start)"
     echo "  status    Show status of running containers"
     echo "  logs      Show application logs (use -f for follow)"
     echo "  help      Show this help message"
     echo ""
+    echo "Available services:"
+    for service in "${AVAILABLE_SERVICES[@]}"; do
+        echo "  $service"
+    done
+    echo ""
     echo "Examples:"
-    echo "  ./control start"
-    echo "  ./control logs -f"
-    echo "  ./control restart"
+    echo "  ./control start                    # Start all services"
+    echo "  ./control start frontend           # Start only frontend"
+    echo "  ./control stop backend-python      # Stop only Python backend"
+    echo "  ./control restart session-manager  # Restart session manager"
+    echo "  ./control logs -f frontend         # Follow frontend logs"
+    echo "  ./control status                   # Show all container status"
     echo ""
     echo "Access the application at: $APP_URL"
 }
 
 # Start the application
 start_app() {
-    echo -e "${BLUE}Starting $APP_NAME...${NC}"
-    echo ""
+    local service="$1"
+    validate_service "$service"
     
-    check_dependencies
-    
-    echo "Building and starting services..."
-    $DOCKER_COMPOSE up --build -d
+    if [ -n "$service" ]; then
+        echo -e "${BLUE}Starting service: $service${NC}"
+        check_dependencies
+        echo "Building and starting $service..."
+        $DOCKER_COMPOSE up --build -d "$service"
+    else
+        echo -e "${BLUE}Starting $APP_NAME...${NC}"
+        check_dependencies
+        echo "Building and starting all services..."
+        $DOCKER_COMPOSE up --build -d
+    fi
     
     if [ $? -eq 0 ]; then
         echo ""
-        echo -e "${GREEN}✅ $APP_NAME is running!${NC}"
-        echo ""
-        echo -e "${BLUE}📍 Access the application at: $APP_URL${NC}"
+        if [ -n "$service" ]; then
+            echo -e "${GREEN}✅ Service $service is running!${NC}"
+        else
+            echo -e "${GREEN}✅ $APP_NAME is running!${NC}"
+            echo ""
+            echo -e "${BLUE}📍 Access the application at: $APP_URL${NC}"
+        fi
         echo ""
         echo "Commands:"
         echo "  ./control stop     - Stop the application"
@@ -85,55 +130,88 @@ start_app() {
         echo "  ./control status   - Check container status"
     else
         echo ""
-        echo -e "${RED}❌ Failed to start the application. Please check the error messages above.${NC}"
+        echo -e "${RED}❌ Failed to start. Please check the error messages above.${NC}"
         exit 1
     fi
 }
 
 # Stop the application
 stop_app() {
-    echo -e "${BLUE}Stopping $APP_NAME...${NC}"
+    local service="$1"
+    validate_service "$service"
     
     check_dependencies
     
-    $DOCKER_COMPOSE down
+    if [ -n "$service" ]; then
+        echo -e "${BLUE}Stopping service: $service${NC}"
+        $DOCKER_COMPOSE stop "$service"
+        $DOCKER_COMPOSE rm -f "$service"
+    else
+        echo -e "${BLUE}Stopping $APP_NAME...${NC}"
+        $DOCKER_COMPOSE down
+    fi
     
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✅ Application stopped successfully.${NC}"
+        if [ -n "$service" ]; then
+            echo -e "${GREEN}✅ Service $service stopped successfully.${NC}"
+        else
+            echo -e "${GREEN}✅ Application stopped successfully.${NC}"
+        fi
     else
-        echo -e "${RED}❌ Failed to stop the application.${NC}"
+        echo -e "${RED}❌ Failed to stop.${NC}"
         exit 1
     fi
 }
 
 # Restart the application
 restart_app() {
-    echo -e "${BLUE}Restarting $APP_NAME...${NC}"
-    echo ""
+    local service="$1"
+    validate_service "$service"
     
     check_dependencies
     
-    echo "Stopping services..."
-    $DOCKER_COMPOSE down
-    
-    echo "Building and starting services..."
-    $DOCKER_COMPOSE up --build -d
-    
-    if [ $? -eq 0 ]; then
+    if [ -n "$service" ]; then
+        echo -e "${BLUE}Restarting service: $service${NC}"
         echo ""
-        echo -e "${GREEN}✅ $APP_NAME has been restarted!${NC}"
-        echo ""
-        echo -e "${BLUE}📍 Access the application at: $APP_URL${NC}"
-        echo ""
-        echo "Commands:"
-        echo "  ./control stop     - Stop the application"
-        echo "  ./control logs -f  - View live logs"
-        echo "  ./control status   - Check container status"
+        echo "Stopping $service..."
+        $DOCKER_COMPOSE stop "$service"
+        $DOCKER_COMPOSE rm -f "$service"
+        echo "Building and starting $service..."
+        $DOCKER_COMPOSE up --build -d "$service"
+        
+        if [ $? -eq 0 ]; then
+            echo ""
+            echo -e "${GREEN}✅ Service $service has been restarted!${NC}"
+        else
+            echo ""
+            echo -e "${RED}❌ Failed to restart $service. Please check the error messages above.${NC}"
+            exit 1
+        fi
     else
+        echo -e "${BLUE}Restarting $APP_NAME...${NC}"
         echo ""
-        echo -e "${RED}❌ Failed to restart the application. Please check the error messages above.${NC}"
-        exit 1
+        echo "Stopping services..."
+        $DOCKER_COMPOSE down
+        echo "Building and starting services..."
+        $DOCKER_COMPOSE up --build -d
+        
+        if [ $? -eq 0 ]; then
+            echo ""
+            echo -e "${GREEN}✅ $APP_NAME has been restarted!${NC}"
+            echo ""
+            echo -e "${BLUE}📍 Access the application at: $APP_URL${NC}"
+        else
+            echo ""
+            echo -e "${RED}❌ Failed to restart the application. Please check the error messages above.${NC}"
+            exit 1
+        fi
     fi
+    
+    echo ""
+    echo "Commands:"
+    echo "  ./control stop     - Stop the application"
+    echo "  ./control logs -f  - View live logs"
+    echo "  ./control status   - Check container status"
 }
 
 # Show container status
@@ -158,21 +236,55 @@ show_status() {
 show_logs() {
     check_dependencies
     
-    # Pass all additional arguments to docker compose logs
-    shift # Remove 'logs' from arguments
-    $DOCKER_COMPOSE logs "$@"
+    # Parse arguments to extract service name if provided
+    local args=()
+    local service=""
+    
+    # Skip 'logs' command
+    shift
+    
+    # Process remaining arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -f|--follow|--tail)
+                args+=("$1")
+                shift
+                ;;
+            *)
+                # Check if this argument is a valid service name
+                for valid_service in "${AVAILABLE_SERVICES[@]}"; do
+                    if [ "$1" = "$valid_service" ]; then
+                        service="$1"
+                        shift
+                        continue 2
+                    fi
+                done
+                # If not a service name, treat as regular argument
+                args+=("$1")
+                shift
+                ;;
+        esac
+    done
+    
+    if [ -n "$service" ]; then
+        validate_service "$service"
+        echo -e "${BLUE}Showing logs for service: $service${NC}"
+        $DOCKER_COMPOSE logs "${args[@]}" "$service"
+    else
+        $DOCKER_COMPOSE logs "${args[@]}"
+    fi
 }
 
 # Main script logic
 case "${1:-help}" in
     start)
-        start_app
+        start_app "$2"
         ;;
     stop)
-        stop_app
+        stop_app "$2"
         ;;
     restart)
-        restart_app
+        restart_app "$2"
         ;;
     status)
         show_status

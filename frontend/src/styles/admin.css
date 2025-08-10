@@ -225,6 +225,11 @@
   border-bottom: 2px solid var(--border-color);
 }
 
+
+
+/* Allow wrapping for specific cells */
+.admin-table td:nth-child(9) { white-space: normal; } /* Last Entry column needs wrapping */
+
 .admin-table td {
   padding: 12px 16px;
   border-bottom: 1px solid var(--border-color);
