@@ -10,6 +10,7 @@ import GHC.Generics
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
+import Data.List (isPrefixOf)
 import Data.IORef
 import qualified Data.Map as Map
 import Control.Monad.IO.Class (liftIO)
@@ -50,15 +51,53 @@ instance ToJSON ResetResponse
 type SessionId = String
 type SessionState = Map.Map SessionId [String]
 
-executeHaskell :: String -> IO (Either String String)
-executeHaskell code = do
+executeHaskellStmt :: SessionId -> [String] -> String -> IO (Either String (String, [String]))
+executeHaskellStmt sessionId previousCode code = do
   result <- try $ runInterpreter $ do
     setImports ["Prelude"]
+    -- Execute all previous code in session to rebuild context
+    mapM_ runStmt previousCode
+    -- Try to run as statement (for definitions)
+    runStmt code
+    return "Statement executed successfully"
+  case result of
+    Left (e :: SomeException) -> return $ Left (show e)
+    Right (Left e) -> return $ Left (errorString e)
+    Right (Right r) -> return $ Right (r, previousCode ++ [code])
+
+executeHaskellExpr :: SessionId -> [String] -> String -> IO (Either String (String, [String]))
+executeHaskellExpr sessionId previousCode code = do
+  result <- try $ runInterpreter $ do
+    setImports ["Prelude"]
+    -- Execute all previous code in session to rebuild context
+    mapM_ runStmt previousCode
+    -- Evaluate as expression
     eval code
   case result of
     Left (e :: SomeException) -> return $ Left (show e)
     Right (Left e) -> return $ Left (errorString e)
-    Right (Right r) -> return $ Right r
+    Right (Right r) -> return $ Right (r, previousCode ++ [code])
+
+executeHaskell :: SessionId -> [String] -> String -> IO (Either String (String, [String]))
+executeHaskell sessionId previousCode code = do
+  -- Check if it's a definition (starts with "let") - handle as statement
+  if "let " `isPrefixOf` code || "import " `isPrefixOf` code
+    then do
+      stmtResult <- executeHaskellStmt sessionId previousCode code
+      case stmtResult of
+        Right (_, newCode) -> return $ Right ("", newCode)  -- Definition, no output
+        Left err -> return $ Left err
+    else do
+      -- Try as expression first (for calculations, function calls)
+      exprResult <- executeHaskellExpr sessionId previousCode code
+      case exprResult of
+        Right result -> return $ Right result  -- Expression succeeded
+        Left _ -> do
+          -- If expression failed, try as statement
+          stmtResult <- executeHaskellStmt sessionId previousCode code
+          case stmtResult of
+            Right (_, newCode) -> return $ Right ("", newCode)  -- Statement succeeded
+            Left err -> return $ Left err
 
 errorString :: InterpreterError -> String
 errorString (UnknownError s) = "Unknown error: " ++ s
@@ -107,10 +146,15 @@ main = do
           S.status status400
           json $ ExecuteResponse "" (Just "Code cannot be empty")
         else do
-          result <- liftIO $ executeHaskell codeStr
+          sessions <- liftIO $ readIORef sessionsRef
+          let previousCode = fromMaybe [] (Map.lookup sessionId sessions)
+          
+          result <- liftIO $ executeHaskell sessionId previousCode codeStr
           case result of
             Left err -> json $ ExecuteResponse "" (Just $ T.pack err)
-            Right out -> json $ ExecuteResponse (T.pack out) Nothing
+            Right (out, newSessionCode) -> do
+              liftIO $ writeIORef sessionsRef $ Map.insert sessionId newSessionCode sessions
+              json $ ExecuteResponse (T.pack out) Nothing
     
     S.post "/reset/:sessionId" $ do
       sessionId <- param "sessionId" :: ActionM String
