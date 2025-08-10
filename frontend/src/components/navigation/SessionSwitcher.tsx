@@ -32,7 +32,6 @@ export const SessionSwitcher = ({
   const sessionSwitcherRef = useRef<HTMLDivElement>(null)
   const resizeHandleRef = useRef<HTMLDivElement>(null)
   const languageMenuRef = useRef<HTMLDivElement>(null)
-  const secondLanguageMenuRef = useRef<HTMLDivElement>(null)
 
   const toggleSessionExpanded = (sessionId: string) => {
     const newExpanded = new Set(expandedSessions)
@@ -155,10 +154,7 @@ export const SessionSwitcher = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (showLanguageMenu) {
-        const isClickInside = (
-          (languageMenuRef.current && languageMenuRef.current.contains(event.target as Node)) ||
-          (secondLanguageMenuRef.current && secondLanguageMenuRef.current.contains(event.target as Node))
-        )
+        const isClickInside = languageMenuRef.current && languageMenuRef.current.contains(event.target as Node)
         
         if (!isClickInside) {
           setShowLanguageMenu(false)
@@ -196,7 +192,7 @@ export const SessionSwitcher = ({
           
           {showLanguageMenu && (
             <div className="language-menu">
-              <div className="language-menu-header">Choose Language for New Session</div>
+              <div className="language-menu-header">Choose Language</div>
               {AVAILABLE_LANGUAGES.map((lang) => (
                 <button
                   key={lang.id}
@@ -217,32 +213,13 @@ export const SessionSwitcher = ({
         {sessions.length === 0 ? (
           <div className="no-sessions">
             <p>No active sessions</p>
-            <div className="create-first-session-dropdown" ref={secondLanguageMenuRef}>
-              <button 
-                className="create-first-session"
-                onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-                disabled={isLoading || isCreating}
-              >
-                Create your first session
-              </button>
-              
-              {showLanguageMenu && (
-                <div className="language-menu">
-                  <div className="language-menu-header">Choose Language for New Session</div>
-                  {AVAILABLE_LANGUAGES.map((lang) => (
-                    <button
-                      key={lang.id}
-                      className="language-option"
-                      onClick={() => handleLanguageSelect(lang.id)}
-                      disabled={isCreating}
-                    >
-                      <span className="language-icon">{lang.icon}</span>
-                      <span className="language-name">{lang.name}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <button 
+              className="create-first-session"
+              onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+              disabled={isLoading || isCreating}
+            >
+              Create your first session
+            </button>
           </div>
         ) : (
           sessions.map((session) => {

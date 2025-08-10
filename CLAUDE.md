@@ -56,6 +56,26 @@ The React frontend (`App.tsx`) implements a terminal interface using:
 - Auto-focus input field with Enter key execution
 - Real-time scroll-to-bottom behavior
 - URL-based session routing: Each session gets a unique UUID in the URL path (e.g., `/<uuid>`)
+- **Required Session Creation**: Terminal is disabled until user creates a session and selects a language
+
+### User Flow v2.1
+
+The application now enforces intentional session creation before allowing code execution:
+
+1. **Initial State**: When no sessions exist, the terminal is hidden/disabled and shows a "No Active Session" message
+2. **Session Creation**: User must click either:
+   - The "+" button in the session sidebar header, or
+   - The "Create your first session" button when no sessions exist
+3. **Language Selection**: A single language selection menu appears with options for Python, JavaScript, Ruby, PHP, Kotlin, or Haskell
+4. **Session Activation**: After selecting a language, a new session is created and the terminal becomes available
+5. **Code Execution**: User can now execute code in their chosen language environment
+6. **Session Persistence**: All variables, imports, and execution state persist within the session until explicitly deleted
+
+**Key UX Improvements**:
+- **No Default Sessions**: Eliminates automatic "Default Session" creation
+- **Intentional Language Choice**: Forces users to consciously choose their programming environment
+- **Clear Visual Feedback**: Disabled terminal clearly indicates that session creation is required
+- **Single Menu System**: Unified language selection eliminates duplicate menu confusion
 
 ### API Communication Flow
 ```
@@ -525,6 +545,8 @@ Backends can be tested by accessing their health endpoints and executing sample 
 - **Entry Types**: `TerminalEntry` supports `'input' | 'output' | 'error'` with distinct styling
 - **Real-time Updates**: Terminal auto-scrolls and focuses input after code execution
 - **Session Switching**: Changing sessions loads that session's terminal history
+- **Conditional Rendering**: Terminal only displays when an active session exists
+- **Session Requirement UI**: Shows "No Active Session" message with instructions when no session is active
 - **Styling System**: CSS uses terminal color scheme (`#7dd3fc` blue, dark backgrounds) with hover effects
 
 ### Container Orchestration

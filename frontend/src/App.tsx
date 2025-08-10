@@ -23,22 +23,15 @@ function App() {
     renameSession,
   } = useSessionManager()
   
-  // Handle session management - create default session or select most recent session
+  // Handle session management - select most recent session when available
   useEffect(() => {
     const handleSessionManagement = async () => {
       // Only act after initial session fetch is complete
       if (!hasInitialized || isSessionLoading) return
       
       if (sessions.length === 0) {
-        // No sessions exist at all - create a default session
-        try {
-          const newSession = await createSession('Default Session')
-          if (newSession) {
-            setCurrentSessionId(newSession.id)
-          }
-        } catch (error) {
-          console.error('Failed to create default session:', error)
-        }
+        // No sessions exist - clear current session and let user create one
+        setCurrentSessionId(undefined)
       } else if (!currentSessionId) {
         // No current session selected - select most recent session
         const mostRecent = sessions.sort(
@@ -49,7 +42,7 @@ function App() {
         // Verify current session still exists
         const sessionExists = sessions.some(s => s.id === currentSessionId)
         if (!sessionExists) {
-          // Current session was deleted - select most recent session
+          // Current session was deleted - select most recent session or clear if none exist
           const mostRecent = sessions.sort(
             (a, b) => new Date(b.last_accessed).getTime() - new Date(a.last_accessed).getTime(),
           )[0]
@@ -59,7 +52,7 @@ function App() {
     }
 
     handleSessionManagement()
-  }, [sessions, hasInitialized, isSessionLoading, currentSessionId, createSession])
+  }, [sessions, hasInitialized, isSessionLoading, currentSessionId])
   
   const {
     currentInput,
@@ -117,20 +110,35 @@ function App() {
       />
       
       <div className="terminal-container">
-        <TerminalHeader />
-        
-        <Terminal
-          history={history}
-          currentInput={currentInput}
-          onInputChange={setCurrentInput}
-          onExecute={handleExecute}
-          selectedLanguage={selectedLanguage}
-          isLoading={isLoading}
-          inputRef={inputRef}
-          terminalRef={terminalRef}
-          onTerminalClick={handleTerminalClick}
-          onNavigateHistory={navigateHistory}
-        />
+        {currentSessionId ? (
+          <>
+            <TerminalHeader />
+            <Terminal
+              history={history}
+              currentInput={currentInput}
+              onInputChange={setCurrentInput}
+              onExecute={handleExecute}
+              selectedLanguage={selectedLanguage}
+              isLoading={isLoading}
+              inputRef={inputRef}
+              terminalRef={terminalRef}
+              onTerminalClick={handleTerminalClick}
+              onNavigateHistory={navigateHistory}
+            />
+          </>
+        ) : (
+          <div className="no-session-message">
+            <div className="message-content">
+              <h2>No Active Session</h2>
+              <p>Create a session from the sidebar to start coding</p>
+              <div className="arrow-indicator">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M7 17l5-5-5-5M12 19h7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

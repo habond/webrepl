@@ -9,7 +9,8 @@ A containerized web-based REPL (Read-Eval-Print Loop) supporting multiple progra
 
 - **Multi-Language Support**: Python, JavaScript, Ruby, PHP, Kotlin, and Haskell backends
 - **Modern Terminal Interface**: React-based terminal with real-time code execution
-- **Session Management**: Persistent execution environments with automatic cleanup
+- **Intentional Session Management**: Users must create sessions and choose languages before coding
+- **Persistent Execution Environments**: Variables and imports persist within each session
 - **Container Architecture**: Fully containerized with Docker Compose orchestration  
 - **Environment Configuration**: Comprehensive `.env` file configuration for flexible deployment
 - **Development Ready**: Hot reloading, structured logging, and comprehensive testing
@@ -44,6 +45,24 @@ A containerized web-based REPL (Read-Eval-Print Loop) supporting multiple progra
 ```
 
 Access the application at: http://localhost:8080
+
+## 💡 How to Use
+
+The application requires intentional session creation before you can start coding:
+
+1. **Open the Application**: Navigate to http://localhost:8080
+2. **Create Your First Session**: 
+   - Click the "Create your first session" button, or
+   - Click the "+" button in the session sidebar
+3. **Choose Your Language**: Select from Python, JavaScript, Ruby, PHP, Kotlin, or Haskell
+4. **Start Coding**: The terminal activates and you can begin executing code
+5. **Persistent Environment**: All variables, functions, and imports remain available within your session
+6. **Multiple Sessions**: Create additional sessions for different projects or languages
+
+**Key Benefits**:
+- **No Automatic Sessions**: Forces deliberate language choice rather than defaulting
+- **Clear Interface**: Terminal is disabled until you create a session, making the workflow obvious  
+- **Language Isolation**: Each session maintains its own execution environment
 
 ## ⚙️ Configuration
 
@@ -160,10 +179,12 @@ curl http://localhost:8080/api/sessions
 
 ### Session Management
 Each user session maintains:
-- Isolated execution environments per language
-- Persistent variables and imports between requests
-- Automatic cleanup and metadata tracking
-- UUID-based session identification
+- **Isolated execution environments** per language with no cross-session interference
+- **Persistent variables and imports** between requests within the same session
+- **Intentional creation workflow** requiring explicit language selection
+- **Automatic cleanup and metadata tracking** with execution counts and timestamps
+- **UUID-based session identification** for reliable session routing
+- **No default sessions** - users must explicitly create sessions to start coding
 
 ## 🛠️ Development
 

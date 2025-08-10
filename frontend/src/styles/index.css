@@ -49,3 +49,43 @@
   justify-content: center;
   z-index: 10;
 }
+
+/* No session message styles */
+.no-session-message {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--terminal-bg);
+  color: var(--text-secondary);
+}
+
+.message-content {
+  text-align: center;
+  max-width: 400px;
+  padding: 2rem;
+}
+
+.message-content h2 {
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+}
+
+.message-content p {
+  font-size: 1rem;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.5;
+}
+
+.arrow-indicator {
+  display: inline-flex;
+  color: var(--text-accent);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.arrow-indicator svg {
+  width: 24px;
+  height: 24px;
+}
