@@ -7,7 +7,7 @@ A containerized web-based REPL (Read-Eval-Print Loop) supporting multiple progra
 
 ## 🚀 Features
 
-- **Multi-Language Support**: Python, JavaScript, Ruby, PHP, Kotlin, and Haskell backends
+- **Multi-Language Support**: Python, JavaScript, Ruby, PHP, Kotlin, Haskell, and Bash backends
 - **Modern Terminal Interface**: React-based terminal with real-time code execution
 - **Intentional Session Management**: Users must create sessions and choose languages before coding
 - **Persistent Execution Environments**: Variables and imports persist within each session
@@ -25,6 +25,7 @@ A containerized web-based REPL (Read-Eval-Print Loop) supporting multiple progra
 | PHP        | Built-in Server   | 8000         | ✅ `BACKEND_PORT` |
 | Kotlin     | Ktor              | 8000         | ✅ `BACKEND_PORT` |
 | Haskell    | Scotty            | 8000         | ✅ `BACKEND_PORT` |
+| Bash       | FastAPI/subprocess| 8000         | ✅ `BACKEND_PORT` |
 
 ## 🏃‍♂️ Quick Start
 
@@ -54,7 +55,7 @@ The application requires intentional session creation before you can start codin
 2. **Create Your First Session**: 
    - Click the "Create your first session" button, or
    - Click the "+" button in the session sidebar
-3. **Choose Your Language**: Select from Python, JavaScript, Ruby, PHP, Kotlin, or Haskell
+3. **Choose Your Language**: Select from Python, JavaScript, Ruby, PHP, Kotlin, Haskell, or Bash
 4. **Start Coding**: The terminal activates and you can begin executing code
 5. **Persistent Environment**: All variables, functions, and imports remain available within your session
 6. **Multiple Sessions**: Create additional sessions for different projects or languages
@@ -253,6 +254,7 @@ This application executes arbitrary code in sandboxed Docker containers. Each ba
 - [PHP Backend](backend/php/CLAUDE.md)
 - [Kotlin Backend](backend/kotlin/CLAUDE.md)
 - [Haskell Backend](backend/haskell/CLAUDE.md)
+- [Bash Backend](backend/bash/CLAUDE.md)
 
 ## 🤝 Contributing
 

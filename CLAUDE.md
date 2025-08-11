@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Multi-Language Web REPL v2.0
 
-A containerized web-based REPL with React frontend supporting multiple programming languages. Features a terminal-like interface for executing stateful code in Python, JavaScript, Ruby, PHP, Kotlin, and Haskell with advanced session management, automatic cleanup, structured logging, and comprehensive development tooling.
+A containerized web-based REPL with React frontend supporting multiple programming languages. Features a terminal-like interface for executing stateful code in Python, JavaScript, Ruby, PHP, Kotlin, Haskell, and Bash with advanced session management, automatic cleanup, structured logging, and comprehensive development tooling.
 
 ## Core Architecture
 
@@ -41,6 +41,12 @@ Each supported language runs as a separate containerized backend:
 - Session-based code execution with GHC runtime
 - Container: `webrepl-backend-haskell` on port 8000
 
+**Bash Backend** (`backend/bash/`):
+- FastAPI server with subprocess execution for shell commands
+- Session-based isolated working directories at `/tmp/bash_sessions/{sessionId}`
+- 30-second timeout protection and full stdout/stderr capture
+- Container: `webrepl-backend-bash` on port 8000
+
 **Session Manager** (`backend/session-manager/`):
 - FastAPI service with SQLite database for session persistence
 - Centralized session CRUD operations and metadata management
@@ -66,7 +72,7 @@ The application now enforces intentional session creation before allowing code e
 2. **Session Creation**: User must click either:
    - The "+" button in the session sidebar header, or
    - The "Create your first session" button when no sessions exist
-3. **Language Selection**: A single language selection menu appears with options for Python, JavaScript, Ruby, PHP, Kotlin, or Haskell
+3. **Language Selection**: A single language selection menu appears with options for Python, JavaScript, Ruby, PHP, Kotlin, Haskell, or Bash
 4. **Session Activation**: After selecting a language, a new session is created and the terminal becomes available
 5. **Code Execution**: User can now execute code in their chosen language environment
 6. **Session Persistence**: All variables, imports, and execution state persist within the session until explicitly deleted
@@ -89,6 +95,7 @@ Frontend → nginx proxy (/api/{language}/*) → Language-specific backend conta
 - `/api/php/execute/{sessionId}` → `backend-php:8000/execute/{sessionId}`
 - `/api/kotlin/execute/{sessionId}` → `backend-kotlin:8000/execute/{sessionId}`
 - `/api/haskell/execute/{sessionId}` → `backend-haskell:8000/execute/{sessionId}`
+- `/api/bash/execute/{sessionId}` → `backend-bash:8000/execute/{sessionId}`
 - `/api/{language}/reset/{sessionId}` → `backend-{language}:8000/reset/{sessionId}`
 - `/api/sessions/*` → `session-manager:8000/*` (session management endpoints)
 
@@ -103,6 +110,7 @@ nginx uses regex patterns to capture and forward the full path including session
 - **PHP Backend**: PHP 8.2-cli with built-in server (`webrepl-backend-php`)
 - **Kotlin Backend**: OpenJDK 17 with Ktor server (`webrepl-backend-kotlin`)
 - **Haskell Backend**: Haskell 9.4 with Scotty server (`webrepl-backend-haskell`)
+- **Bash Backend**: Python 3.11-slim with FastAPI (`webrepl-backend-bash`)
 - **Network**: Bridge network `webrepl-network` for inter-container communication
 - **Persistence**: Session metadata and terminal history stored in SQLite. Language execution environments persist in backend memory until restart.
 - **Orchestration**: Two docker-compose files - main project and backend-only for testing
@@ -363,7 +371,7 @@ Clear the execution state for the specified language and session.
 **Response**: `{"message": "Namespace reset successfully"}`
 
 **Parameters**:
-- `{language}`: One of `python`, `javascript`, `ruby`, `php`, `kotlin`, `haskell`
+- `{language}`: One of `python`, `javascript`, `ruby`, `php`, `kotlin`, `haskell`, `bash`
 - `{sessionId}`: UUID string identifying the user session
 
 **Session Isolation**: Each session maintains completely separate execution environments. Variables, imports, and state are isolated between different session IDs.
@@ -457,6 +465,7 @@ This application executes arbitrary code (Python, JavaScript, Ruby, PHP, Kotlin,
 - PHP backend implementation details: `backend/php/CLAUDE.md`
 - Kotlin backend implementation details: `backend/kotlin/CLAUDE.md`
 - Haskell backend implementation details: `backend/haskell/CLAUDE.md`
+- Bash backend implementation details: `backend/bash/CLAUDE.md`
 - Frontend implementation details: `frontend/CLAUDE.md`
 
 # Frontend Architecture Deep Dive

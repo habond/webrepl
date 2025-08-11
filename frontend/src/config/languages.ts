@@ -46,4 +46,11 @@ export const AVAILABLE_LANGUAGES: Language[] = [
     prompt: 'λ> ', 
     port: DEFAULT_BACKEND_PORT,
   },
+  { 
+    id: 'bash', 
+    name: 'Bash',
+    icon: '$',
+    prompt: '$ ', 
+    port: DEFAULT_BACKEND_PORT,
+  },
 ]

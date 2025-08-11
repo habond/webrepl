@@ -74,6 +74,13 @@ The session manager provides:
 - **Container**: `webrepl-backend-haskell`
 - **Documentation**: `backend/haskell/CLAUDE.md`
 
+### Bash (`/backend/bash/`)
+- **Framework**: FastAPI with subprocess execution
+- **Features**: Session-based isolated working directories, 30-second timeout protection
+- **Port**: 8000 (container internal)
+- **Container**: `webrepl-backend-bash`
+- **Documentation**: `backend/bash/CLAUDE.md`
+
 ## Session Architecture
 
 ### Session Isolation
@@ -100,6 +107,7 @@ Frontend → nginx proxy (/api/{language}/*) → Language-specific backend conta
 - `/api/php/execute/{sessionId}` → `backend-php:8000/execute/{sessionId}`
 - `/api/kotlin/execute/{sessionId}` → `backend-kotlin:8000/execute/{sessionId}`
 - `/api/haskell/execute/{sessionId}` → `backend-haskell:8000/execute/{sessionId}`
+- `/api/bash/execute/{sessionId}` → `backend-bash:8000/execute/{sessionId}`
 - `/api/{language}/reset/{sessionId}` → `backend-{language}:8000/reset/{sessionId}`
 - `/api/sessions/*` → `session-manager:8000/sessions/*` (session management endpoints)
 

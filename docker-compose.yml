@@ -17,6 +17,7 @@ services:
       - backend-php
       - backend-kotlin
       - backend-haskell
+      - backend-bash
     restart: unless-stopped
     networks:
       - webrepl-network
