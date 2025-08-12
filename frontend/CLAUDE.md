@@ -13,7 +13,7 @@ React application providing a web-based terminal interface for multi-language RE
 
 ## Features v2.0
 
-- **Multi-Language Support**: Python, JavaScript, Ruby, PHP, Kotlin, Haskell language selection
+- **Multi-Language Support**: Python, JavaScript, Ruby, PHP, Kotlin, Haskell, Perl language selection
 - **Session Management**: UUID-based sessions with persistent execution contexts
 - **Terminal Interface**: Terminal-style UI with chronological entry history
 - **Session Switching**: Create, select, and manage multiple sessions
@@ -73,6 +73,7 @@ The frontend uses three core custom hooks:
 - **PHP**: `/api/php/execute/{sessionId}`
 - **Kotlin**: `/api/kotlin/execute/{sessionId}`
 - **Haskell**: `/api/haskell/execute/{sessionId}`
+- **Perl**: `/api/perl/execute/{sessionId}`
 
 ## Development
 
@@ -154,7 +155,7 @@ Integrated ESLint configuration handles both linting and formatting:
 ## UI Flow v2.0
 
 1. **Session Creation**: User creates new session or selects existing session
-2. **Language Selection**: Choose programming language (Python/JavaScript/Ruby/PHP/Kotlin/Haskell)
+2. **Language Selection**: Choose programming language (Python/JavaScript/Ruby/PHP/Kotlin/Haskell/Perl)
 3. **Code Input**: Type code in terminal-style input field
 4. **Execution**: Press Enter or click Run button
 5. **Session Persistence**: Code execution updates session-specific context

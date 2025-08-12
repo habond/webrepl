@@ -81,6 +81,13 @@ The session manager provides:
 - **Container**: `webrepl-backend-bash`
 - **Documentation**: `backend/bash/CLAUDE.md`
 
+### Perl (`/backend/perl/`)
+- **Framework**: FastAPI with subprocess execution
+- **Features**: Session-based persistent execution environments with history file accumulation, 30-second timeout protection
+- **Port**: 8000 (container internal)
+- **Container**: `webrepl-backend-perl`
+- **Documentation**: `backend/perl/CLAUDE.md`
+
 ## Session Architecture
 
 ### Session Isolation
@@ -107,6 +114,7 @@ Frontend → nginx proxy (/api/{language}/*) → Language-specific backend conta
 - `/api/php/execute/{sessionId}` → `backend-php:8000/execute/{sessionId}`
 - `/api/kotlin/execute/{sessionId}` → `backend-kotlin:8000/execute/{sessionId}`
 - `/api/haskell/execute/{sessionId}` → `backend-haskell:8000/execute/{sessionId}`
+- `/api/perl/execute/{sessionId}` → `backend-perl:8000/execute/{sessionId}`
 - `/api/bash/execute/{sessionId}` → `backend-bash:8000/execute/{sessionId}`
 - `/api/{language}/reset/{sessionId}` → `backend-{language}:8000/reset/{sessionId}`
 - `/api/sessions/*` → `session-manager:8000/sessions/*` (session management endpoints)

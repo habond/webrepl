@@ -53,4 +53,11 @@ export const AVAILABLE_LANGUAGES: Language[] = [
     prompt: '$ ', 
     port: DEFAULT_BACKEND_PORT,
   },
+  { 
+    id: 'perl', 
+    name: 'Perl',
+    icon: '🐪',
+    prompt: 'perl> ', 
+    port: DEFAULT_BACKEND_PORT,
+  },
 ]

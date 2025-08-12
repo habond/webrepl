@@ -9,10 +9,11 @@ export PHP_BACKEND_HOST=${PHP_BACKEND_HOST:-backend-php}
 export KOTLIN_BACKEND_HOST=${KOTLIN_BACKEND_HOST:-backend-kotlin}
 export HASKELL_BACKEND_HOST=${HASKELL_BACKEND_HOST:-backend-haskell}
 export BASH_BACKEND_HOST=${BASH_BACKEND_HOST:-backend-bash}
+export PERL_BACKEND_HOST=${PERL_BACKEND_HOST:-backend-perl}
 export BACKEND_PORT=${BACKEND_PORT:-8000}
 
 # Generate nginx.conf from template
-envsubst '${SESSION_MANAGER_HOST} ${PYTHON_BACKEND_HOST} ${JAVASCRIPT_BACKEND_HOST} ${RUBY_BACKEND_HOST} ${PHP_BACKEND_HOST} ${KOTLIN_BACKEND_HOST} ${HASKELL_BACKEND_HOST} ${BASH_BACKEND_HOST} ${BACKEND_PORT}' < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/conf.d/default.conf
+envsubst '${SESSION_MANAGER_HOST} ${PYTHON_BACKEND_HOST} ${JAVASCRIPT_BACKEND_HOST} ${RUBY_BACKEND_HOST} ${PHP_BACKEND_HOST} ${KOTLIN_BACKEND_HOST} ${HASKELL_BACKEND_HOST} ${BASH_BACKEND_HOST} ${PERL_BACKEND_HOST} ${BACKEND_PORT}' < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/conf.d/default.conf
 
 # Start nginx
 exec nginx -g "daemon off;"
