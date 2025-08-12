@@ -9,7 +9,7 @@ interface TerminalProps {
   onExecute: () => void
   selectedLanguage: Language
   isLoading: boolean
-  inputRef: React.RefObject<HTMLInputElement | null>
+  inputRef: React.RefObject<HTMLTextAreaElement | null>
   terminalRef: React.RefObject<HTMLDivElement | null>
   onTerminalClick: (e: React.MouseEvent, isLoading: boolean) => void
   onNavigateHistory: (direction: 'up' | 'down') => void

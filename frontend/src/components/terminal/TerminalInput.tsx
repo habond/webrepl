@@ -6,7 +6,7 @@ interface TerminalInputProps {
   onExecute: () => void
   selectedLanguage: Language
   disabled?: boolean
-  inputRef: React.RefObject<HTMLInputElement | null>
+  inputRef: React.RefObject<HTMLTextAreaElement | null>
   onNavigateHistory: (direction: 'up' | 'down') => void
 }
 
@@ -19,10 +19,16 @@ export const TerminalInput = ({
   inputRef,
   onNavigateHistory, 
 }: TerminalInputProps) => {
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter') {
-      e.preventDefault()
-      onExecute()
+      if (e.shiftKey) {
+        // Shift+Enter: Allow new line (default behavior)
+        return
+      } else {
+        // Enter: Execute code
+        e.preventDefault()
+        onExecute()
+      }
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       onNavigateHistory('up')
@@ -35,9 +41,8 @@ export const TerminalInput = ({
   return (
     <div className="terminal-line input-line">
       <span className="prompt">{selectedLanguage.prompt}</span>
-      <input
+      <textarea
         ref={inputRef}
-        type="text"
         className="terminal-input"
         value={value}
         onChange={e => onChange(e.target.value)}
@@ -45,6 +50,17 @@ export const TerminalInput = ({
         disabled={disabled}
         autoComplete="off"
         spellCheck={false}
+        rows={1}
+        style={{
+          resize: 'none',
+          overflow: 'hidden',
+        }}
+        onInput={(e) => {
+          // Auto-resize textarea based on content
+          const target = e.target as HTMLTextAreaElement
+          target.style.height = 'auto'
+          target.style.height = `${target.scrollHeight}px`
+        }}
       />
     </div>
   )

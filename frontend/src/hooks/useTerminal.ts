@@ -29,7 +29,7 @@ const getDefaultSessionState = (language?: string): SessionState => ({
 })
 
 export const useTerminal = (sessionId: string, sessionLanguage?: string, sessionHistory?: TerminalEntry[]) => {
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
   const terminalRef = useRef<HTMLDivElement>(null)
   const previousSessionId = useRef<string | null>(null)
 

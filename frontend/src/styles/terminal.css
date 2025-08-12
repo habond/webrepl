@@ -153,6 +153,7 @@
   border-radius: 8px;
   padding: 8px;
   border: 1px solid var(--border-color);
+  align-items: flex-start;
 }
 
 .prompt {
@@ -183,6 +184,9 @@
   flex: 1;
   caret-color: var(--text-accent);
   text-shadow: 0 0 5px var(--accent-bg-hover);
+  min-height: 22px;
+  line-height: 1.5;
+  vertical-align: top;
 }
 
 .terminal-input:disabled {
