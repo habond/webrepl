@@ -196,10 +196,32 @@ interface TerminalEntry {
 - **Session Isolation**: Complete isolation between different session contexts
 
 ### Terminal Functionality  
-- **Command History**: Navigate through previous inputs (future enhancement)
-- **Multi-Line Input**: Support for complex code blocks
+- **Command History**: Navigate through previous inputs with Arrow Up/Down keys
+- **Multi-Line Input**: Support for complex code blocks (Shift+Enter for new line)
 - **Copy/Paste**: Terminal supports standard copy/paste operations
-- **Keyboard Shortcuts**: Terminal-style keyboard navigation
+- **Keyboard Shortcuts**: Full keyboard navigation support
+
+### Keyboard Shortcuts Implementation
+
+**Session Switching Hotkeys:**
+- Implemented in `App.tsx` using global keyboard event listeners
+- Platform detection via `navigator.platform` for Mac vs Windows/Linux
+- Uses `event.code` property to detect physical keys (avoids Option key special characters issue)
+
+**Mac Shortcuts:**
+- `⌘⌥1-9` (Cmd+Option+1-9): Direct session access by index
+- `⌘⌥[` / `⌘⌥]` (Cmd+Option+Brackets): Previous/Next session navigation
+
+**Windows/Linux Shortcuts:**
+- `Ctrl+Alt+1-9`: Direct session access by index
+- `Ctrl+Alt+[` / `Ctrl+Alt+]`: Previous/Next session navigation
+
+**Implementation Details:**
+- Hotkeys work even when input field is focused (no blocking for session switching)
+- Auto-refocus input after session switch with 50ms delay
+- Visual hints in `SessionSwitcher` component show shortcuts next to session names
+- Keyboard shortcuts reference panel at bottom of session sidebar
+- Uses `code.startsWith('Digit')` to detect number keys reliably across keyboard layouts
 
 ## Development Notes
 

@@ -11,6 +11,7 @@ A containerized web-based REPL (Read-Eval-Print Loop) supporting multiple progra
 - **Modern Terminal Interface**: React-based terminal with real-time code execution
 - **Intentional Session Management**: Users must create sessions and choose languages before coding
 - **Persistent Execution Environments**: Variables and imports persist within each session
+- **Keyboard Shortcuts**: Platform-specific hotkeys for rapid session switching
 - **Container Architecture**: Fully containerized with Docker Compose orchestration  
 - **Environment Configuration**: Comprehensive `.env` file configuration for flexible deployment
 - **Development Ready**: Hot reloading, structured logging, and comprehensive testing
@@ -60,10 +61,30 @@ The application requires intentional session creation before you can start codin
 5. **Persistent Environment**: All variables, functions, and imports remain available within your session
 6. **Multiple Sessions**: Create additional sessions for different projects or languages
 
+### ⌨️ Keyboard Shortcuts
+
+Navigate between sessions quickly with platform-specific keyboard shortcuts:
+
+**Mac:**
+- `⌘⌥1` through `⌘⌥9` - Switch directly to session 1-9
+- `⌘⌥[` - Switch to previous session
+- `⌘⌥]` - Switch to next session
+
+**Windows/Linux:**
+- `Ctrl+Alt+1` through `Ctrl+Alt+9` - Switch directly to session 1-9
+- `Ctrl+Alt+[` - Switch to previous session
+- `Ctrl+Alt+]` - Switch to next session
+
+**Terminal Navigation:**
+- `Enter` - Execute code
+- `Shift+Enter` - New line in multi-line input
+- `Arrow Up/Down` - Navigate command history
+
 **Key Benefits**:
 - **No Automatic Sessions**: Forces deliberate language choice rather than defaulting
 - **Clear Interface**: Terminal is disabled until you create a session, making the workflow obvious  
 - **Language Isolation**: Each session maintains its own execution environment
+- **Rapid Switching**: Keyboard shortcuts work even when terminal input is focused
 
 ## ⚙️ Configuration
 

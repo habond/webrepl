@@ -83,6 +83,26 @@ The application now enforces intentional session creation before allowing code e
 - **Clear Visual Feedback**: Disabled terminal clearly indicates that session creation is required
 - **Single Menu System**: Unified language selection eliminates duplicate menu confusion
 
+### Keyboard Shortcuts
+
+The application supports keyboard shortcuts for rapid session switching:
+
+**Mac:**
+- `⌘⌥1` through `⌘⌥9` - Switch directly to session 1-9
+- `⌘⌥[` - Switch to previous session
+- `⌘⌥]` - Switch to next session
+
+**Windows/Linux:**
+- `Ctrl+Alt+1` through `Ctrl+Alt+9` - Switch directly to session 1-9
+- `Ctrl+Alt+[` - Switch to previous session
+- `Ctrl+Alt+]` - Switch to next session
+
+**Features:**
+- Hotkeys work even when the terminal input is focused
+- Visual hints show hotkey combinations next to session names
+- Keyboard shortcuts reference panel at bottom of session sidebar
+- Input field automatically refocuses after switching sessions
+
 ### API Communication Flow
 ```
 Frontend → nginx proxy (/api/{language}/*) → Language-specific backend container (port 8000)

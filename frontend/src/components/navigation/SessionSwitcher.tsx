@@ -21,6 +21,7 @@ export const SessionSwitcher = ({
   onSelectSession,
   isLoading, 
 }: SessionSwitcherProps) => {
+  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set())
   const [isCreating, setIsCreating] = useState(false)
   const [showLanguageMenu, setShowLanguageMenu] = useState(false)
@@ -222,13 +223,14 @@ export const SessionSwitcher = ({
             </button>
           </div>
         ) : (
-          sessions.map((session) => {
+          sessions.map((session, index) => {
             const isActive = session.id === currentSessionId
             const isExpanded = expandedSessions.has(session.id)
             const languageInfo = getLanguageInfo(session.language)
+            const hotkeyHint = index < 9 ? `${isMac ? '⌘⌥' : 'Ctrl+Alt+'}${index + 1}` : ''
             
             return (
-              <div key={session.id} className={`session-item ${isActive ? 'active' : ''}`}>
+              <div key={session.id} className={`session-item ${isActive ? 'active' : ''}`} title={hotkeyHint}>
                 <div className="session-main" onClick={() => switchToSession(session.id)}>
                   <div className="session-language-badge">
                     <span className="language-icon">{languageInfo.icon}</span>
@@ -246,7 +248,12 @@ export const SessionSwitcher = ({
                         onClick={(e) => e.stopPropagation()}
                       />
                     ) : (
-                      <span className="session-name">{session.name}</span>
+                      <span className="session-name">
+                        {session.name}
+                        {hotkeyHint && index < 9 && (
+                          <span className="hotkey-hint">{hotkeyHint}</span>
+                        )}
+                      </span>
                     )}
                     <span className="session-meta">
                       {languageInfo.name} • {session.execution_count} executions • {formatTimeAgo(session.last_accessed)}
@@ -327,6 +334,22 @@ export const SessionSwitcher = ({
             )
           })
         )}
+      </div>
+
+      <div className="keyboard-shortcuts">
+        <div className="shortcuts-title">Keyboard Shortcuts</div>
+        <div className="shortcut-item">
+          <kbd>{isMac ? '⌘⌥' : 'Ctrl+Alt+'}1-9</kbd>
+          <span>Switch to session</span>
+        </div>
+        <div className="shortcut-item">
+          <kbd>{isMac ? '⌘⌥[' : 'Ctrl+Alt+['}</kbd>
+          <span>Previous session</span>
+        </div>
+        <div className="shortcut-item">
+          <kbd>{isMac ? '⌘⌥]' : 'Ctrl+Alt+]'}</kbd>
+          <span>Next session</span>
+        </div>
       </div>
 
       {(isLoading || isCreating) && (
