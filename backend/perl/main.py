@@ -95,22 +95,18 @@ def execute_code(session_id: str, request: CodeRequest):
     session["execution_count"] += 1
     
     try:
-        # Get the session's history file
-        history_file = Path(session["history_file"])
-        existing_code = history_file.read_text()
-        
-        # Create a temporary file with all previous code plus the new code
+        # Create a temporary file with just the new code
         with tempfile.NamedTemporaryFile(
             mode='w',
             suffix='.pl',
             dir=session["working_dir"],
             delete=False
         ) as temp_file:
-            # Write all previous code
-            temp_file.write(existing_code)
+            # Write the strict mode and warnings header
+            temp_file.write("#!/usr/bin/perl\nuse strict;\nuse warnings;\n\n")
             
             # Add the new code
-            temp_file.write(f"\n# Execution {session['execution_count']}\n")
+            temp_file.write(f"# Execution {session['execution_count']}\n")
             temp_file.write(request.code)
             if not request.code.endswith('\n'):
                 temp_file.write('\n')
@@ -128,6 +124,7 @@ def execute_code(session_id: str, request: CodeRequest):
         
         # If execution was successful, append the code to history
         if result.returncode == 0:
+            history_file = Path(session["history_file"])
             with open(history_file, 'a') as f:
                 f.write(f"\n# Execution {session['execution_count']}\n")
                 f.write(request.code)
