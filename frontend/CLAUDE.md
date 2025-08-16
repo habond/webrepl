@@ -14,7 +14,7 @@ React application providing a web-based terminal interface for multi-language RE
 ## Features v2.0
 
 - **Multi-Language Support**: Python, JavaScript, Ruby, PHP, Kotlin, Haskell, Perl, Bash language selection
-- **Real-time Streaming**: Server-Sent Events (SSE) for incremental output in supported languages
+- **Real-time Streaming**: Server-Sent Events (SSE) for incremental output in Python and Bash
 - **Session Management**: UUID-based sessions with persistent execution contexts
 - **Terminal Interface**: Terminal-style UI with chronological entry history
 - **Session Switching**: Create, select, and manage multiple sessions
@@ -74,7 +74,7 @@ The frontend uses three core custom hooks:
 - **Proxy Configuration**: nginx routes `/api/{language}/*` to `backend-{language}:8000/*`
 
 ### Language Support
-- **Python**: `/api/python/execute/{sessionId}`
+- **Python**: `/api/python/execute/{sessionId}` and `/api/python/execute-stream/{sessionId}` (SSE)
 - **JavaScript**: `/api/javascript/execute/{sessionId}`
 - **Ruby**: `/api/ruby/execute/{sessionId}`
 - **PHP**: `/api/php/execute/{sessionId}`
@@ -193,6 +193,7 @@ interface Language {
 
 export const languages: Language[] = [
   // ... other languages
+  { id: 'python', name: 'Python', icon: '🐍', supportsStreaming: true },
   { id: 'bash', name: 'Bash', icon: '⌨️', supportsStreaming: true }
 ]
 ```

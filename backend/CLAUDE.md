@@ -1,6 +1,6 @@
-# Backend - Multi-Language REPL Servers v2.0
+# Backend - Multi-Language REPL Servers v2.1
 
-Collection of language-specific REPL backend implementations with centralized session management.
+Collection of language-specific REPL backend implementations with centralized session management and real-time streaming capabilities.
 
 ## Architecture v2.0
 
@@ -12,6 +12,7 @@ The backend architecture consists of:
 ### Session-Based API Interface
 All backends implement session-aware REST endpoints:
 - `POST /execute/{sessionId}` - Execute code in session-specific context
+- `POST /execute-stream/{sessionId}` - Execute code with real-time streaming (Python, Bash)
 - `POST /reset/{sessionId}` - Clear execution state for specific session
 - `GET /health` - Health check endpoint
 
@@ -35,6 +36,7 @@ The session manager provides:
 ### Python (`/backend/python/`)
 - **Framework**: FastAPI with uvicorn
 - **Features**: Session-based persistent namespaces using `exec(code, session_namespace)`
+- **Streaming**: Server-Sent Events (SSE) with threading-based real-time output
 - **Port**: 8000 (container internal)
 - **Container**: `webrepl-backend-python`
 - **Documentation**: `backend/python/CLAUDE.md`
@@ -109,6 +111,7 @@ Frontend → nginx proxy (/api/{language}/*) → Language-specific backend conta
 
 **Session-Based Routes**:
 - `/api/python/execute/{sessionId}` → `backend-python:8000/execute/{sessionId}`
+- `/api/python/execute-stream/{sessionId}` → `backend-python:8000/execute-stream/{sessionId}` (SSE streaming)
 - `/api/javascript/execute/{sessionId}` → `backend-javascript:8000/execute/{sessionId}`
 - `/api/ruby/execute/{sessionId}` → `backend-ruby:8000/execute/{sessionId}`
 - `/api/php/execute/{sessionId}` → `backend-php:8000/execute/{sessionId}`

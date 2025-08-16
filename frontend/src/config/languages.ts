@@ -10,6 +10,7 @@ export const AVAILABLE_LANGUAGES: Language[] = [
     icon: '🐍',
     prompt: '>>> ', 
     port: DEFAULT_BACKEND_PORT,
+    supportsStreaming: true,
   },
   { 
     id: 'javascript', 

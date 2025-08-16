@@ -13,7 +13,9 @@ Each supported language runs as a separate containerized backend:
 
 **Python Backend** (`backend/python/`):
 - FastAPI with session-based persistent namespaces using `exec(code, session_namespace)`
+- **Real-time Streaming**: Server-Sent Events (SSE) for incremental output streaming using threading
 - Variables and imports persist between requests within each session
+- Thread-safe execution with proper stdout/stderr capture and real-time output polling
 - Container: `webrepl-backend-python` on port 8000
 
 **JavaScript Backend** (`backend/javascript/`):
@@ -118,6 +120,7 @@ Frontend → nginx proxy (/api/{language}/*) → Language-specific backend conta
 
 **Session-Based API Routes**:
 - `/api/python/execute/{sessionId}` → `backend-python:8000/execute/{sessionId}`
+- `/api/python/execute-stream/{sessionId}` → `backend-python:8000/execute-stream/{sessionId}` (SSE streaming)
 - `/api/javascript/execute/{sessionId}` → `backend-javascript:8000/execute/{sessionId}`
 - `/api/ruby/execute/{sessionId}` → `backend-ruby:8000/execute/{sessionId}`
 - `/api/php/execute/{sessionId}` → `backend-php:8000/execute/{sessionId}`
@@ -397,6 +400,17 @@ Execute code in the specified language backend for the given session.
 **Request**: `{"code": "print('hello')"}`
 **Response**: `{"output": "hello\n", "error": null}`
 
+### `POST /api/python/execute-stream/{sessionId}` (Server-Sent Events)
+Execute Python code with real-time streaming output using threading for enhanced user experience.
+**Request**: `{"code": "import time\nfor i in range(1,4):\n    print(f'Line {i}')\n    time.sleep(1)"}`
+**Response**: SSE stream with incremental output events
+```
+data: {"type": "output", "content": "Line 1\n"}
+data: {"type": "output", "content": "Line 2\n"}
+data: {"type": "output", "content": "Line 3\n"}
+data: {"type": "complete", "returnCode": 0}
+```
+
 ### `POST /api/bash/execute-stream/{sessionId}` (Server-Sent Events)
 Execute bash commands with real-time streaming output for enhanced user experience.
 **Request**: `{"code": "for i in {1..3}; do echo \"Line $i\"; sleep 1; done"}`
@@ -627,9 +641,17 @@ Backends can be tested by accessing their health endpoints and executing sample 
 # Server-Sent Events (SSE) Streaming Architecture
 
 ## Overview
-The application implements real-time output streaming using Server-Sent Events (SSE) for enhanced user experience with long-running commands. Currently implemented for the Bash backend with extensible architecture for other languages.
+The application implements real-time output streaming using Server-Sent Events (SSE) for enhanced user experience with long-running commands. Currently implemented for Python and Bash backends with extensible architecture for other languages.
 
 ## Streaming Implementation
+
+### Backend Architecture (Python)
+- **Endpoint**: `/execute-stream/{sessionId}` provides SSE streaming
+- **Threading-Based Execution**: Python code runs in separate thread with real-time output capture
+- **Thread-Safe Output**: `ThreadSafeStreamingStdout` with proper locking for concurrent access
+- **Real-time Polling**: Main async loop polls output buffer every 100ms for immediate streaming
+- **Event Types**: `output`, `error`, and `complete` events with structured JSON data
+- **Session Isolation**: Per-session namespace isolation maintained across streaming and regular execution
 
 ### Backend Architecture (Bash)
 - **Endpoint**: `/execute-stream/{sessionId}` provides SSE streaming

@@ -4,12 +4,17 @@ import sys
 import logging
 import base64
 import pickle
-from typing import Any, Dict
+import asyncio
+import json
+import threading
+import time
+from typing import Any, Dict, AsyncGenerator, Optional
 from datetime import datetime
 import httpx
 
 from fastapi import FastAPI, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from error_handler import ErrorHandler, ErrorType, ExecutionResult, get_http_status_for_error_type
@@ -278,6 +283,163 @@ async def execute_code(
         error=result.error,
         error_type=result.error_type.value if result.error_type else None,
         session_info=result.session_info
+    )
+
+
+
+
+class ThreadSafeStreamingStdout:
+    """Thread-safe stdout that can stream output in real-time"""
+    def __init__(self):
+        self.buffer = []
+        self.lock = threading.Lock()
+        
+    def write(self, text: str) -> int:
+        if text:
+            with self.lock:
+                self.buffer.append(text)
+        return len(text)
+    
+    def flush(self):
+        pass
+    
+    def get_and_clear(self) -> str:
+        """Get all output since last call and clear buffer"""
+        with self.lock:
+            if self.buffer:
+                output = ''.join(self.buffer)
+                self.buffer.clear()
+                return output
+            return ""
+
+
+async def stream_python_execution(session_id: str, code: str) -> AsyncGenerator[str, None]:
+    """Stream Python code execution with real-time output using threading"""
+    logger.info(f"Starting streaming execution for session {session_id[:8]}...")
+    
+    # Verify session is configured for Python
+    if not await verify_session_language(session_id):
+        yield f"data: {json.dumps({'type': 'error', 'content': f'Session {session_id} is not configured for Python'})}\n\n"
+        return
+    
+    # Validate input
+    if not code.strip():
+        yield f"data: {json.dumps({'type': 'error', 'content': 'Code cannot be empty'})}\n\n"
+        return
+
+    # Create thread-safe stdout capture
+    streaming_stdout = ThreadSafeStreamingStdout()
+    streaming_stderr = ThreadSafeStreamingStdout()
+    execution_complete = threading.Event()
+    execution_error = None
+
+    # Get session namespace from session manager
+    namespace = await get_session_namespace(session_id)
+
+    def execute_python_code(namespace_dict):
+        """Execute Python code in a separate thread"""
+        nonlocal execution_error
+        
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
+        
+        try:
+            sys.stdout = streaming_stdout
+            sys.stderr = streaming_stderr
+            
+            code_stripped = code.strip()
+            
+            try:
+                # Try to evaluate as expression first (for REPL-like behavior)
+                try:
+                    result = eval(code_stripped, namespace_dict)
+                    # If eval succeeds and returns a value (not None), display it
+                    if result is not None:
+                        print(result)
+                except SyntaxError:
+                    # If eval fails, try exec (for statements like assignments, imports, etc.)
+                    exec(code_stripped, namespace_dict)
+                    
+            except Exception as e:
+                execution_error = e
+                error_msg = str(e)
+                # For tracebacks, format them nicely
+                if hasattr(e, '__traceback__'):
+                    import traceback
+                    error_msg = ''.join(traceback.format_exception(type(e), e, e.__traceback__))
+                
+                print(error_msg, file=sys.stderr)
+                
+        finally:
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
+            execution_complete.set()
+
+    try:
+        # Start execution in a separate thread
+        execution_thread = threading.Thread(target=execute_python_code, args=(namespace,))
+        execution_thread.start()
+        
+        # Stream output while execution is running
+        while not execution_complete.is_set():
+            # Check for new output
+            new_output = streaming_stdout.get_and_clear()
+            if new_output:
+                yield f"data: {json.dumps({'type': 'output', 'content': new_output})}\n\n"
+            
+            new_error = streaming_stderr.get_and_clear()
+            if new_error:
+                yield f"data: {json.dumps({'type': 'error', 'content': new_error})}\n\n"
+            
+            # Small delay to allow streaming effect
+            await asyncio.sleep(0.1)
+        
+        # Wait for thread to complete
+        execution_thread.join(timeout=30)  # 30 second timeout
+        
+        # Get any final output
+        final_output = streaming_stdout.get_and_clear()
+        if final_output:
+            yield f"data: {json.dumps({'type': 'output', 'content': final_output})}\n\n"
+            
+        final_error = streaming_stderr.get_and_clear()
+        if final_error:
+            yield f"data: {json.dumps({'type': 'error', 'content': final_error})}\n\n"
+        
+        # Save updated namespace back to session manager
+        await save_session_namespace(session_id, namespace)
+        
+        # Send completion event
+        return_code = 0 if execution_error is None else 1
+        yield f"data: {json.dumps({'type': 'complete', 'returnCode': return_code})}\n\n"
+
+    except Exception as e:
+        logger.error(f"Streaming execution error in session {session_id[:8]}: {e}")
+        yield f"data: {json.dumps({'type': 'error', 'content': f'Execution error: {str(e)}'})}\n\n"
+        yield f"data: {json.dumps({'type': 'complete', 'returnCode': 1})}\n\n"
+
+    # Notify session manager of activity
+    await notify_session_manager(session_id)
+    
+    logger.info(f"Streaming execution completed for session {session_id[:8]}")
+
+
+@app.post("/execute-stream/{session_id}")
+async def execute_code_stream(
+    request: CodeRequest, 
+    session_id: str = Path(..., description="Session GUID")
+):
+    """Execute Python code with streaming output using Server-Sent Events"""
+    logger.info(f"Starting streaming execution for session {session_id[:8]}...")
+    
+    return StreamingResponse(
+        stream_python_execution(session_id, request.code),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Disable nginx buffering
+        }
     )
 
 

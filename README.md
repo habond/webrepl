@@ -21,7 +21,7 @@ A containerized web-based REPL (Read-Eval-Print Loop) supporting multiple progra
 
 | Language   | Backend Technology | Default Port | Streaming Support | Configurable |
 |------------|-------------------|--------------|------------------|--------------|
-| Python     | FastAPI           | 8000         | ❌               | ✅ `BACKEND_PORT` |
+| Python     | FastAPI           | 8000         | ✅ **SSE Threading** | ✅ `BACKEND_PORT` |
 | JavaScript | Express.js        | 8000         | ❌               | ✅ `BACKEND_PORT` |
 | Ruby       | Sinatra           | 8000         | ❌               | ✅ `BACKEND_PORT` |
 | PHP        | Built-in Server   | 8000         | ❌               | ✅ `BACKEND_PORT` |
@@ -60,7 +60,7 @@ The application requires intentional session creation before you can start codin
    - Click the "+" button in the session sidebar
 3. **Choose Your Language**: Select from Python, JavaScript, Ruby, PHP, Kotlin, Haskell, Perl, or Bash
 4. **Start Coding**: The terminal activates and you can begin executing code
-5. **Real-time Output**: For Bash commands, see output streaming in real-time as it executes
+5. **Real-time Output**: For Python and Bash commands, see output streaming in real-time as it executes
 6. **Persistent Environment**: All variables, functions, and imports remain available within your session
 7. **Multiple Sessions**: Create additional sessions for different projects or languages
 
@@ -93,6 +93,22 @@ Navigate between sessions quickly with platform-specific keyboard shortcuts:
 
 Experience enhanced UX with **Server-Sent Events (SSE)** streaming for long-running commands:
 
+**Python Code with Streaming**:
+```python
+import time
+
+# See output appear line by line in real-time
+for i in range(1, 6):
+    print(f"Processing item {i}")
+    time.sleep(1)
+
+# Watch long-running operations
+import time
+for step in ["Initializing", "Loading data", "Processing", "Completing"]:
+    print(f"Status: {step}")
+    time.sleep(2)
+```
+
 **Bash Commands with Streaming**:
 ```bash
 # See output appear line by line in real-time
@@ -117,7 +133,7 @@ done
 - ✅ **Better UX** - No waiting for long-running commands to finish
 - ✅ **Extensible** - Easy to add streaming support to other languages
 
-**Note**: Currently available for Bash commands. Other languages use traditional request/response execution.
+**Note**: Currently available for Python and Bash. Other languages use traditional request/response execution.
 
 ## ⚙️ Configuration
 
@@ -216,13 +232,23 @@ curl http://localhost:8080/api/bash/health
 # Test session manager
 curl http://localhost:8080/api/sessions
 
-# Test streaming output (create session first)
+# Test streaming output (create sessions first)
 curl -X POST http://localhost:8080/api/sessions \
   -H "Content-Type: application/json" \
-  -d '{"name": "Test Session", "language": "bash"}'
+  -d '{"name": "Python Test Session", "language": "python"}'
+
+curl -X POST http://localhost:8080/api/sessions \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Bash Test Session", "language": "bash"}'
+
+# Test Python streaming
+curl -X POST http://localhost:8080/api/python/execute-stream/YOUR_PYTHON_SESSION_ID \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/event-stream" \
+  -d '{"code": "import time\nfor i in range(1,4):\n    print(f\"Line {i}\")\n    time.sleep(1)"}'
 
 # Test bash streaming
-curl -X POST http://localhost:8080/api/bash/execute-stream/YOUR_SESSION_ID \
+curl -X POST http://localhost:8080/api/bash/execute-stream/YOUR_BASH_SESSION_ID \
   -H "Content-Type: application/json" \
   -H "Accept: text/event-stream" \
   -d '{"code": "for i in {1..3}; do echo \"Line $i\"; sleep 1; done"}'
@@ -238,6 +264,7 @@ curl -X POST http://localhost:8080/api/bash/execute-stream/YOUR_SESSION_ID \
 
 ### API Endpoints
 - `POST /api/{language}/execute/{sessionId}` - Execute code (traditional)
+- `POST /api/python/execute-stream/{sessionId}` - Execute Python with SSE streaming
 - `POST /api/bash/execute-stream/{sessionId}` - Execute bash with SSE streaming
 - `POST /api/{language}/reset/{sessionId}` - Reset session
 - `GET /api/sessions` - List active sessions
@@ -294,6 +321,7 @@ webrepl/
 │   ├── kotlin/        # Kotlin Ktor backend
 │   ├── haskell/       # Haskell Scotty backend
 │   ├── perl/          # Perl backend
+│   ├── python/        # Python FastAPI backend (with SSE streaming)
 │   ├── bash/          # Bash backend (with SSE streaming)
 │   └── session-manager/ # Session persistence
 ├── docker-compose.yml # Main orchestration
@@ -325,6 +353,7 @@ This application executes arbitrary code in sandboxed Docker containers. Each ba
 - [Kotlin Backend](backend/kotlin/CLAUDE.md)
 - [Haskell Backend](backend/haskell/CLAUDE.md)
 - [Perl Backend](backend/perl/CLAUDE.md)
+- [Python Backend](backend/python/CLAUDE.md) - **Includes SSE streaming documentation**
 - [Bash Backend](backend/bash/CLAUDE.md) - **Includes SSE streaming documentation**
 
 ## 🤝 Contributing
