@@ -171,6 +171,24 @@ export const useTerminal = (sessionId: string, sessionLanguage?: string, session
     }
   }, [sessionId, getCurrentState, updateSessionState])
 
+  const updateEntry = useCallback((entryId: string, newContent: string) => {
+    const currentState = getCurrentState()
+    const newHistory = currentState.history.map(entry => 
+      entry.id === entryId ? { ...entry, content: newContent } : entry
+    )
+    
+    updateSessionState({ history: newHistory })
+    setSessionState(prev => ({ ...prev, history: newHistory }))
+
+    // Save updated entry to session manager
+    if (sessionId) {
+      sessionHistoryService.updateHistoryEntry(sessionId, entryId, newContent).catch(error => {
+        console.error('Failed to update history entry in session manager:', error)
+        // Continue with local state even if server save fails
+      })
+    }
+  }, [sessionId, getCurrentState, updateSessionState])
+
   const clearInput = useCallback(() => {
     setCurrentInput('')
   }, [setCurrentInput])
@@ -234,6 +252,7 @@ export const useTerminal = (sessionId: string, sessionLanguage?: string, session
     inputRef,
     terminalRef,
     addEntry,
+    updateEntry,
     clearInput,
     focusInput,
     handleTerminalClick,

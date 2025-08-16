@@ -53,6 +53,9 @@ class CreateSessionRequest(BaseModel):
 class AddHistoryEntryRequest(BaseModel):
     entry: TerminalEntry
 
+class UpdateHistoryEntryRequest(BaseModel):
+    content: str
+
 class UpdateEnvironmentRequest(BaseModel):
     language: str
     serialized_data: Optional[str] = None  # Base64 encoded serialized state
@@ -377,6 +380,48 @@ async def add_history_entry(session_id: str, request: AddHistoryEntryRequest, db
         raise HTTPException(status_code=500, detail=f"Failed to save history: {str(e)}")
     
     return {"message": "History entry added", "entry_count": len(new_history)}
+
+@app.put("/sessions/{session_id}/history/{entry_id}")
+async def update_history_entry(session_id: str, entry_id: str, request: UpdateHistoryEntryRequest, db: DBSession = Depends(get_db)):
+    """Update content of a specific terminal entry in session history"""
+    db_session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
+    if not db_session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Get existing history
+    existing_history = db_session.history if db_session.history else []
+    
+    # Find and update the specific entry
+    entry_found = False
+    new_history = []
+    for entry in existing_history:
+        if entry.get('id') == entry_id:
+            # Update the content of this entry
+            updated_entry = {**entry, 'content': request.content}
+            new_history.append(updated_entry)
+            entry_found = True
+        else:
+            new_history.append(entry)
+    
+    if not entry_found:
+        raise HTTPException(status_code=404, detail="History entry not found")
+    
+    # Update session with the modified history
+    db_session.history = new_history
+    db_session.last_accessed = datetime.utcnow()
+    
+    # Explicitly mark the history attribute as modified for SQLAlchemy
+    flag_modified(db_session, 'history')
+    
+    try:
+        db.commit()
+        logger.info(f"Successfully updated history entry {entry_id} in session {session_id}")
+    except Exception as e:
+        logger.error(f"Database commit error: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to update history entry: {str(e)}")
+    
+    return {"message": "History entry updated", "entry_id": entry_id}
 
 @app.get("/sessions/{session_id}/history")
 async def get_session_history(session_id: str, db: DBSession = Depends(get_db)):

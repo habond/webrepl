@@ -14,7 +14,8 @@ FastAPI service providing centralized session management for multi-language REPL
 
 - **Centralized Session Management**: CRUD operations for all REPL sessions
 - **SQLite Persistence**: Session metadata and terminal history stored in database
-- **Terminal History**: Persistent terminal entry storage across browser sessions
+- **Terminal History**: Persistent terminal entry storage across browser sessions with update capabilities
+- **Streaming Support**: History entry updates for real-time output streaming persistence
 - **Session Isolation**: Complete isolation between different session contexts
 - **Language Backend Integration**: Automatic cleanup coordination with language backends
 - **Admin Interface**: Detailed session inspection for debugging and monitoring
@@ -166,6 +167,24 @@ Get terminal history for a specific session.
 }
 ```
 
+#### `PUT /sessions/{sessionId}/history/{entryId}`
+Update an existing terminal history entry (used for streaming output persistence).
+
+**Request:**
+```json
+{
+  "content": "Updated output content"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "History entry updated successfully",
+  "entry_id": "entry-uuid"
+}
+```
+
 #### `DELETE /sessions/{sessionId}/history`
 Clear terminal history for a specific session.
 
@@ -271,6 +290,33 @@ LANGUAGE_BACKENDS = {
 
 When sessions are deleted, the session manager calls `POST {backend_url}/reset/{sessionId}` to cleanup execution state.
 
+### Server-Sent Events (SSE) Integration
+
+The session manager supports real-time streaming output persistence:
+
+**History Update Flow for Streaming**:
+1. Frontend receives SSE events from streaming-enabled backends
+2. Terminal entries updated incrementally in frontend UI
+3. Updates sent to session manager via `PUT /sessions/{sessionId}/history/{entryId}`
+4. History persisted in database for page refresh scenarios
+
+**Implementation Details**:
+```python
+@app.put("/sessions/{session_id}/history/{entry_id}")
+async def update_history_entry(session_id: str, entry_id: str, request: UpdateHistoryEntryRequest):
+    # Find and update specific entry by ID in history array
+    for entry in session.history:
+        if entry.get('id') == entry_id:
+            entry['content'] = request.content
+            flag_modified(session, 'history')  # Mark JSON column as modified
+            break
+```
+
+**Benefits**:
+- **Persistent Streaming**: SSE output preserved across browser sessions
+- **Incremental Updates**: Efficient updates to existing entries without recreating entire history
+- **Database Consistency**: Atomic updates ensure history integrity
+
 ## Development
 
 ### Local Development Setup
@@ -309,8 +355,10 @@ docker run -p 8000:8000 -v session_data:/app/data webrepl-session-manager
 
 ### Terminal History Persistence
 - Terminal entries stored as JSON array in `history` column
-- Explicit SQLAlchemy change tracking using `flag_modified()`
+- Support for updating existing entries for streaming output persistence
+- Explicit SQLAlchemy change tracking using `flag_modified()` for JSON column updates
 - Atomic updates to prevent history corruption
+- Entry ID-based updates enable real-time streaming output persistence
 
 ### Environment Serialization
 - Language backends can serialize execution state to base64 strings

@@ -13,14 +13,15 @@ React application providing a web-based terminal interface for multi-language RE
 
 ## Features v2.0
 
-- **Multi-Language Support**: Python, JavaScript, Ruby, PHP, Kotlin, Haskell, Perl language selection
+- **Multi-Language Support**: Python, JavaScript, Ruby, PHP, Kotlin, Haskell, Perl, Bash language selection
+- **Real-time Streaming**: Server-Sent Events (SSE) for incremental output in supported languages
 - **Session Management**: UUID-based sessions with persistent execution contexts
 - **Terminal Interface**: Terminal-style UI with chronological entry history
 - **Session Switching**: Create, select, and manage multiple sessions
 - **URL Routing**: Each session gets unique URL (`/<sessionId>`)
 - **Auto-Focus**: Input field automatically focuses after execution
 - **Keyboard Shortcuts**: Enter key execution, terminal-style navigation
-- **Real-time Updates**: Auto-scroll to bottom, loading states
+- **Real-time Updates**: Auto-scroll to bottom, loading states, streaming indicators
 - **Session Metadata**: Session names, creation times, execution counts
 
 ## Architecture v2.0
@@ -41,9 +42,15 @@ The frontend uses three core custom hooks:
 - Terminal history cached per session, cleared when sessions deleted
 
 **useCodeExecution** (`src/hooks/useCodeExecution.ts`):
-- Handles code execution API calls to `/api/{language}/execute/{sessionId}`
+- Handles code execution API calls to `/api/{language}/execute/{sessionId}` for non-streaming languages
 - Manages execution loading states and error handling
 - Integrates with terminal history via `addEntry` callback
+
+**useStreamingExecution** (`src/hooks/useStreamingExecution.ts`):
+- Handles both streaming and non-streaming code execution based on language configuration
+- Manages Server-Sent Events (SSE) for real-time output streaming
+- Provides incremental terminal updates via `addEntry` and `updateEntry` callbacks
+- Automatically routes to appropriate execution method based on `supportsStreaming` property
 
 ## Component Structure
 
@@ -74,6 +81,7 @@ The frontend uses three core custom hooks:
 - **Kotlin**: `/api/kotlin/execute/{sessionId}`
 - **Haskell**: `/api/haskell/execute/{sessionId}`
 - **Perl**: `/api/perl/execute/{sessionId}`
+- **Bash**: `/api/bash/execute/{sessionId}` and `/api/bash/execute-stream/{sessionId}` (SSE)
 
 ## Development
 
@@ -152,15 +160,82 @@ Integrated ESLint configuration handles both linting and formatting:
 - Session ID validation and fallback to default session
 - Browser history integration for session navigation
 
-## UI Flow v2.0
+## UI Flow v2.1
 
 1. **Session Creation**: User creates new session or selects existing session
-2. **Language Selection**: Choose programming language (Python/JavaScript/Ruby/PHP/Kotlin/Haskell/Perl)
+2. **Language Selection**: Choose programming language (Python/JavaScript/Ruby/PHP/Kotlin/Haskell/Perl/Bash)
 3. **Code Input**: Type code in terminal-style input field
 4. **Execution**: Press Enter or click Run button
-5. **Session Persistence**: Code execution updates session-specific context
-6. **Terminal Display**: Response shows in chronological terminal history
-7. **State Preservation**: Variables and functions persist within session
+5. **Real-time Output**: For streaming-enabled languages, see output as it's generated
+6. **Session Persistence**: Code execution updates session-specific context
+7. **Terminal Display**: Response shows in chronological terminal history
+8. **State Preservation**: Variables and functions persist within session
+
+## Server-Sent Events (SSE) Streaming
+
+### Streaming Architecture
+The frontend implements real-time output streaming using Server-Sent Events (SSE) for enhanced user experience with long-running commands.
+
+### Implementation
+
+**Dual Hook System**:
+- `useCodeExecution`: Traditional request/response for non-streaming languages
+- `useStreamingExecution`: SSE handling with automatic routing based on language configuration
+
+**Language Configuration** (`src/config/languages.ts`):
+```typescript
+interface Language {
+  id: string
+  name: string
+  icon: string
+  supportsStreaming?: boolean  // Enables SSE streaming for this language
+}
+
+export const languages: Language[] = [
+  // ... other languages
+  { id: 'bash', name: 'Bash', icon: '⌨️', supportsStreaming: true }
+]
+```
+
+**Execution Flow**:
+1. **Language Detection**: Frontend checks `selectedLanguage.supportsStreaming`
+2. **Route Selection**: Automatically uses SSE endpoint for streaming languages
+3. **Real-time Updates**: Terminal entries updated incrementally as events arrive
+4. **History Persistence**: Streaming updates saved to session manager via `updateEntry`
+
+### SSE Event Handling
+
+**Event Processing** (`useStreamingExecution.ts`):
+```typescript
+const executeCodeWithStreaming = async (code, selectedLanguage, onAddEntry, onUpdateEntry) => {
+  if (selectedLanguage.supportsStreaming) {
+    // Use SSE streaming endpoint
+    const response = await fetch(`/api/${selectedLanguage.id}/execute-stream/${sessionId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    })
+    
+    const reader = response.body?.getReader()
+    // Process SSE events and update terminal incrementally
+  } else {
+    // Use traditional request/response
+    const response = await fetch(`/api/${selectedLanguage.id}/execute/${sessionId}`)
+    // Handle complete response
+  }
+}
+```
+
+**Terminal Updates**:
+- **Incremental Output**: `updateEntry(entryId, newContent)` appends to existing entries
+- **History Persistence**: Updates sent to session manager for page refresh persistence
+- **Loading States**: Unified loading indicators for both streaming and non-streaming modes
+
+### Benefits
+- **Real-time Feedback**: Users see output as it's generated
+- **Better UX**: No waiting for long-running commands to complete
+- **Persistent History**: Streaming updates preserved across browser sessions
+- **Extensible**: Easy to add streaming support to other languages via configuration
 
 ## Terminal Entry Types
 
@@ -206,7 +281,7 @@ interface TerminalEntry {
 
 **Session Switching Hotkeys:**
 - Implemented in `App.tsx` using global keyboard event listeners
-- Platform detection via `navigator.platform` for Mac vs Windows/Linux
+- Platform detection via `navigator.userAgent` for Mac vs Windows/Linux
 - Uses `event.code` property to detect physical keys (avoids Option key special characters issue)
 
 **Mac Shortcuts:**

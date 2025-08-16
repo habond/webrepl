@@ -167,6 +167,18 @@ class SessionHistoryService {
     }
   }
 
+  async updateHistoryEntry(sessionId: string, entryId: string, content: string): Promise<void> {
+    const response = await this.makeRequest(
+      'PUT',
+      `/sessions/${sessionId}/history/${entryId}`,
+      { content },
+    )
+
+    if (!response.ok) {
+      throw new Error(`Failed to update history entry: ${response.statusText}`)
+    }
+  }
+
   async getSessionHistory(sessionId: string): Promise<TerminalEntry[]> {
     const response = await this.makeRequest('GET', `/sessions/${sessionId}/history`)
     

@@ -1,13 +1,14 @@
-# Multi-Language Web REPL v2.0
+# Multi-Language Web REPL v2.1
 
 [![CI](https://github.com/habond/webrepl/actions/workflows/ci.yml/badge.svg)](https://github.com/habond/webrepl/actions/workflows/ci.yml)
 [![Docker Build & Publish](https://github.com/habond/webrepl/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/habond/webrepl/actions/workflows/docker-publish.yml)
 
-A containerized web-based REPL (Read-Eval-Print Loop) supporting multiple programming languages through a modern React interface. Execute code in real-time with persistent session management and comprehensive development tooling.
+A containerized web-based REPL (Read-Eval-Print Loop) supporting multiple programming languages through a modern React interface. Execute code in real-time with persistent session management, **real-time streaming output**, and comprehensive development tooling.
 
 ## 🚀 Features
 
-- **Multi-Language Support**: Python, JavaScript, Ruby, PHP, Kotlin, Haskell, and Bash backends
+- **Multi-Language Support**: Python, JavaScript, Ruby, PHP, Kotlin, Haskell, Perl, and Bash backends
+- **Real-time Streaming Output**: Server-Sent Events (SSE) for incremental output in long-running commands
 - **Modern Terminal Interface**: React-based terminal with real-time code execution
 - **Intentional Session Management**: Users must create sessions and choose languages before coding
 - **Persistent Execution Environments**: Variables and imports persist within each session
@@ -18,15 +19,16 @@ A containerized web-based REPL (Read-Eval-Print Loop) supporting multiple progra
 
 ## 📋 Supported Languages
 
-| Language   | Backend Technology | Default Port | Configurable |
-|------------|-------------------|--------------|--------------|
-| Python     | FastAPI           | 8000         | ✅ `BACKEND_PORT` |
-| JavaScript | Express.js        | 8000         | ✅ `BACKEND_PORT` |
-| Ruby       | Sinatra           | 8000         | ✅ `BACKEND_PORT` |
-| PHP        | Built-in Server   | 8000         | ✅ `BACKEND_PORT` |
-| Kotlin     | Ktor              | 8000         | ✅ `BACKEND_PORT` |
-| Haskell    | Scotty            | 8000         | ✅ `BACKEND_PORT` |
-| Bash       | FastAPI/subprocess| 8000         | ✅ `BACKEND_PORT` |
+| Language   | Backend Technology | Default Port | Streaming Support | Configurable |
+|------------|-------------------|--------------|------------------|--------------|
+| Python     | FastAPI           | 8000         | ❌               | ✅ `BACKEND_PORT` |
+| JavaScript | Express.js        | 8000         | ❌               | ✅ `BACKEND_PORT` |
+| Ruby       | Sinatra           | 8000         | ❌               | ✅ `BACKEND_PORT` |
+| PHP        | Built-in Server   | 8000         | ❌               | ✅ `BACKEND_PORT` |
+| Kotlin     | Ktor              | 8000         | ❌               | ✅ `BACKEND_PORT` |
+| Haskell    | Scotty            | 8000         | ❌               | ✅ `BACKEND_PORT` |
+| Perl       | FastAPI/subprocess| 8000         | ❌               | ✅ `BACKEND_PORT` |
+| Bash       | FastAPI/subprocess| 8000         | ✅ **SSE**       | ✅ `BACKEND_PORT` |
 
 ## 🏃‍♂️ Quick Start
 
@@ -56,10 +58,11 @@ The application requires intentional session creation before you can start codin
 2. **Create Your First Session**: 
    - Click the "Create your first session" button, or
    - Click the "+" button in the session sidebar
-3. **Choose Your Language**: Select from Python, JavaScript, Ruby, PHP, Kotlin, Haskell, or Bash
+3. **Choose Your Language**: Select from Python, JavaScript, Ruby, PHP, Kotlin, Haskell, Perl, or Bash
 4. **Start Coding**: The terminal activates and you can begin executing code
-5. **Persistent Environment**: All variables, functions, and imports remain available within your session
-6. **Multiple Sessions**: Create additional sessions for different projects or languages
+5. **Real-time Output**: For Bash commands, see output streaming in real-time as it executes
+6. **Persistent Environment**: All variables, functions, and imports remain available within your session
+7. **Multiple Sessions**: Create additional sessions for different projects or languages
 
 ### ⌨️ Keyboard Shortcuts
 
@@ -85,6 +88,36 @@ Navigate between sessions quickly with platform-specific keyboard shortcuts:
 - **Clear Interface**: Terminal is disabled until you create a session, making the workflow obvious  
 - **Language Isolation**: Each session maintains its own execution environment
 - **Rapid Switching**: Keyboard shortcuts work even when terminal input is focused
+
+### 🔄 Real-time Streaming Output
+
+Experience enhanced UX with **Server-Sent Events (SSE)** streaming for long-running commands:
+
+**Bash Commands with Streaming**:
+```bash
+# See output appear line by line in real-time
+for i in {1..5}; do
+  echo "Processing item $i"
+  sleep 1
+done
+
+# Watch logs streaming live
+tail -f /var/log/system.log
+
+# Monitor processes in real-time
+while true; do
+  echo "System load: $(uptime)"
+  sleep 2
+done
+```
+
+**Features**:
+- ✅ **Real-time feedback** - See output as it's generated, not after completion
+- ✅ **Persistent history** - Streaming output preserved across browser refreshes  
+- ✅ **Better UX** - No waiting for long-running commands to finish
+- ✅ **Extensible** - Easy to add streaming support to other languages
+
+**Note**: Currently available for Bash commands. Other languages use traditional request/response execution.
 
 ## ⚙️ Configuration
 
@@ -178,9 +211,21 @@ curl http://localhost:8080/api/ruby/health
 curl http://localhost:8080/api/php/health
 curl http://localhost:8080/api/kotlin/health
 curl http://localhost:8080/api/haskell/health
+curl http://localhost:8080/api/bash/health
 
 # Test session manager
 curl http://localhost:8080/api/sessions
+
+# Test streaming output (create session first)
+curl -X POST http://localhost:8080/api/sessions \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Test Session", "language": "bash"}'
+
+# Test bash streaming
+curl -X POST http://localhost:8080/api/bash/execute-stream/YOUR_SESSION_ID \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/event-stream" \
+  -d '{"code": "for i in {1..3}; do echo \"Line $i\"; sleep 1; done"}'
 ```
 
 ## 🏗️ Architecture
@@ -192,12 +237,14 @@ curl http://localhost:8080/api/sessions
 - **Networking**: Bridge network connecting all containers
 
 ### API Endpoints
-- `POST /api/{language}/execute/{sessionId}` - Execute code
+- `POST /api/{language}/execute/{sessionId}` - Execute code (traditional)
+- `POST /api/bash/execute-stream/{sessionId}` - Execute bash with SSE streaming
 - `POST /api/{language}/reset/{sessionId}` - Reset session
 - `GET /api/sessions` - List active sessions
 - `POST /api/sessions` - Create new session
 - `DELETE /api/sessions/{sessionId}` - Delete session
 - `PUT /api/sessions/{sessionId}/rename` - Rename session
+- `PUT /api/sessions/{sessionId}/history/{entryId}` - Update history entry (streaming)
 
 ### Session Management
 Each user session maintains:
@@ -246,6 +293,8 @@ webrepl/
 │   ├── php/           # PHP backend
 │   ├── kotlin/        # Kotlin Ktor backend
 │   ├── haskell/       # Haskell Scotty backend
+│   ├── perl/          # Perl backend
+│   ├── bash/          # Bash backend (with SSE streaming)
 │   └── session-manager/ # Session persistence
 ├── docker-compose.yml # Main orchestration
 └── control.sh        # Application control script
@@ -275,7 +324,8 @@ This application executes arbitrary code in sandboxed Docker containers. Each ba
 - [PHP Backend](backend/php/CLAUDE.md)
 - [Kotlin Backend](backend/kotlin/CLAUDE.md)
 - [Haskell Backend](backend/haskell/CLAUDE.md)
-- [Bash Backend](backend/bash/CLAUDE.md)
+- [Perl Backend](backend/perl/CLAUDE.md)
+- [Bash Backend](backend/bash/CLAUDE.md) - **Includes SSE streaming documentation**
 
 ## 🤝 Contributing
 

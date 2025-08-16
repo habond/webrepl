@@ -9,6 +9,7 @@ interface TerminalProps {
   onExecute: () => void
   selectedLanguage: Language
   isLoading: boolean
+  isStreaming?: boolean
   inputRef: React.RefObject<HTMLTextAreaElement | null>
   terminalRef: React.RefObject<HTMLDivElement | null>
   onTerminalClick: (e: React.MouseEvent, isLoading: boolean) => void
@@ -22,6 +23,7 @@ export const Terminal = ({
   onExecute, 
   selectedLanguage, 
   isLoading, 
+  isStreaming = false,
   inputRef, 
   terminalRef, 
   onTerminalClick,
@@ -46,7 +48,7 @@ export const Terminal = ({
           />
         ))}
         
-        {isLoading && (
+        {(isLoading || isStreaming) && (
           <div className="terminal-line loading">
             <span className="loading-indicator">...</span>
           </div>
@@ -57,7 +59,7 @@ export const Terminal = ({
           onChange={onInputChange}
           onExecute={onExecute}
           selectedLanguage={selectedLanguage}
-          disabled={isLoading}
+          disabled={isLoading || isStreaming}
           inputRef={inputRef}
           onNavigateHistory={onNavigateHistory}
         />

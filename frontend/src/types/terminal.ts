@@ -18,6 +18,7 @@ export interface Language {
   icon: string
   prompt: string
   port: number
+  supportsStreaming?: boolean
 }
 
 export interface APIResponse {

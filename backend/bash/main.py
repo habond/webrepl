@@ -1,11 +1,14 @@
 import subprocess
 import os
-from typing import Dict, Any, Optional
+import asyncio
+from typing import Dict, Any, Optional, AsyncGenerator
 from datetime import datetime, timezone
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import logging
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -115,6 +118,160 @@ async def execute_code(session_id: str, request: CodeRequest):
             output="",
             error=f"Error executing command: {str(e)}"
         )
+
+async def stream_command_output(session_id: str, code: str) -> AsyncGenerator[str, None]:
+    """Stream command output using Server-Sent Events"""
+    session = get_or_create_session(session_id)
+    session["execution_count"] += 1
+    
+    process = None
+    try:
+        # Set environment to reduce buffering
+        env = session["environment"].copy()
+        env["PYTHONUNBUFFERED"] = "1"
+        env["TERM"] = "dumb"
+        
+        # Write the command to a temporary script file to ensure proper execution
+        import tempfile
+        import os
+        
+        # Create temporary script file for proper bash execution
+        script_fd, script_path = tempfile.mkstemp(suffix='.sh', dir=session["working_directory"])
+        try:
+            script_content = f"#!/bin/bash\nset -e\n{code}\n"
+            with os.fdopen(script_fd, 'w') as script_file:
+                script_file.write(script_content)
+            
+            # Make the script executable
+            os.chmod(script_path, 0o755)
+            
+            process = await asyncio.create_subprocess_exec(
+                '/bin/bash', script_path,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=session["working_directory"],
+                env=env
+            )
+        except Exception as e:
+            # Cleanup script file on error
+            try:
+                os.unlink(script_path)
+            except:
+                pass
+            raise e
+        
+        # Stream output line by line from both stdout and stderr
+        async def stream_output():
+            """Stream lines from stdout and stderr as they become available"""
+            
+            # Read output line by line as it becomes available
+            while True:
+                # Check if process is still running
+                if process.returncode is not None:
+                    break
+                
+                # Try to read a line from stdout
+                try:
+                    line = await asyncio.wait_for(process.stdout.readline(), timeout=0.1)
+                    if line:
+                        decoded_line = line.decode('utf-8', errors='replace')
+                        yield f"data: {json.dumps({'type': 'output', 'content': decoded_line})}\n\n"
+                    else:
+                        # Empty line means EOF - check stderr too
+                        try:
+                            stderr_line = await asyncio.wait_for(process.stderr.readline(), timeout=0.01)
+                            if stderr_line:
+                                decoded_line = stderr_line.decode('utf-8', errors='replace')
+                                yield f"data: {json.dumps({'type': 'error', 'content': decoded_line})}\n\n"
+                        except asyncio.TimeoutError:
+                            pass
+                        # If no stdout and process might be done, break
+                        break
+                except asyncio.TimeoutError:
+                    # No output available yet, but process might still be running
+                    # Check stderr too
+                    try:
+                        stderr_line = await asyncio.wait_for(process.stderr.readline(), timeout=0.01)
+                        if stderr_line:
+                            decoded_line = stderr_line.decode('utf-8', errors='replace')
+                            yield f"data: {json.dumps({'type': 'error', 'content': decoded_line})}\n\n"
+                    except asyncio.TimeoutError:
+                        pass
+                    # Continue waiting for more output
+                    continue
+        
+        # Stream output and wait for process completion concurrently
+        output_done = False
+        
+        async def stream_and_check():
+            nonlocal output_done
+            async for line in stream_output():
+                yield line
+            output_done = True
+        
+        # Create tasks for streaming and process completion
+        stream_task = stream_and_check()
+        
+        # Continue streaming until both output is done AND process completes
+        async for line in stream_task:
+            yield line
+            
+        # Wait for process to complete
+        return_code = await process.wait()
+        
+        # Cleanup the temporary script file
+        try:
+            os.unlink(script_path)
+        except:
+            pass
+        
+        # Send completion event
+        yield f"data: {json.dumps({'type': 'complete', 'returnCode': return_code})}\n\n"
+        
+        logger.info(f"Session {session_id}: Streamed command execution completed")
+        
+    except asyncio.TimeoutError:
+        logger.warning(f"Session {session_id}: Command timed out")
+        yield f"data: {json.dumps({'type': 'error', 'content': 'Command execution timed out after 30 seconds'})}\n\n"
+        if process:
+            process.kill()
+            await process.wait()
+        # Cleanup script file
+        try:
+            os.unlink(script_path)
+        except:
+            pass
+    except Exception as e:
+        logger.error(f"Session {session_id}: Streaming execution error: {str(e)}")
+        yield f"data: {json.dumps({'type': 'error', 'content': f'Error executing command: {str(e)}'})}\n\n"
+        if process:
+            try:
+                process.kill()
+                await process.wait()
+            except:
+                pass
+        # Cleanup script file
+        try:
+            os.unlink(script_path)
+        except:
+            pass
+
+@app.post("/execute-stream/{session_id}")
+async def execute_code_stream(session_id: str, request: CodeRequest):
+    """Execute Bash code with streaming output using Server-Sent Events"""
+    
+    if not request.code or request.code.strip() == "":
+        raise HTTPException(status_code=400, detail="Code cannot be empty")
+    
+    return StreamingResponse(
+        stream_command_output(session_id, request.code),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Disable nginx buffering
+        }
+    )
 
 @app.post("/reset/{session_id}")
 async def reset_session(session_id: str):

@@ -9,6 +9,7 @@ import { Terminal } from '@/components/terminal/Terminal'
 import { SessionSwitcher } from '@/components/navigation/SessionSwitcher'
 import { useTerminal } from '@/hooks/useTerminal'
 import { useCodeExecution } from '@/hooks/useCodeExecution'
+import { useStreamingExecution } from '@/hooks/useStreamingExecution'
 import { useSessionManager } from '@/hooks/useSessionManager'
 
 function App() {
@@ -62,6 +63,7 @@ function App() {
     inputRef,
     terminalRef,
     addEntry,
+    updateEntry,
     clearInput,
     focusInput,
     handleTerminalClick,
@@ -75,18 +77,29 @@ function App() {
     })),
   )
 
-  const { isLoading, executeCode } = useCodeExecution(currentSessionId || '')
+  const { isLoading: isRegularLoading, executeCode } = useCodeExecution(currentSessionId || '')
+  const { isStreaming, executeCodeWithStreaming } = useStreamingExecution(currentSessionId || '')
+
+  const isLoading = isRegularLoading
 
   const handleExecute = async () => {
     const codeToExecute = currentInput
     clearInput() // Clear input immediately to prevent interference
-    await executeCode(codeToExecute, selectedLanguage, addEntry)
+    
+    if (selectedLanguage.supportsStreaming) {
+      // Use streaming execution
+      await executeCodeWithStreaming(codeToExecute, selectedLanguage, addEntry, updateEntry)
+    } else {
+      // Use regular execution
+      await executeCode(codeToExecute, selectedLanguage, addEntry)
+    }
+    
     // Ensure input is focused after execution completes
     focusInput()
   }
 
   // Detect if running on Mac
-  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
+  const isMac = navigator.userAgent.includes('Mac')
 
   // Session switching hotkeys
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -170,6 +183,7 @@ function App() {
               onExecute={handleExecute}
               selectedLanguage={selectedLanguage}
               isLoading={isLoading}
+              isStreaming={isStreaming}
               inputRef={inputRef}
               terminalRef={terminalRef}
               onTerminalClick={handleTerminalClick}

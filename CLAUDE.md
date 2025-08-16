@@ -44,7 +44,9 @@ Each supported language runs as a separate containerized backend:
 **Bash Backend** (`backend/bash/`):
 - FastAPI server with subprocess execution for shell commands
 - Session-based isolated working directories at `/tmp/bash_sessions/{sessionId}`
+- **Real-time Streaming**: Server-Sent Events (SSE) for incremental output streaming
 - 30-second timeout protection and full stdout/stderr capture
+- Temporary script file execution for proper bash command handling
 - Container: `webrepl-backend-bash` on port 8000
 
 **Perl Backend** (`backend/perl/`):
@@ -123,6 +125,7 @@ Frontend → nginx proxy (/api/{language}/*) → Language-specific backend conta
 - `/api/haskell/execute/{sessionId}` → `backend-haskell:8000/execute/{sessionId}`
 - `/api/perl/execute/{sessionId}` → `backend-perl:8000/execute/{sessionId}`
 - `/api/bash/execute/{sessionId}` → `backend-bash:8000/execute/{sessionId}`
+- `/api/bash/execute-stream/{sessionId}` → `backend-bash:8000/execute-stream/{sessionId}` (SSE streaming)
 - `/api/{language}/reset/{sessionId}` → `backend-{language}:8000/reset/{sessionId}`
 - `/api/sessions/*` → `session-manager:8000/*` (session management endpoints)
 
@@ -394,6 +397,17 @@ Execute code in the specified language backend for the given session.
 **Request**: `{"code": "print('hello')"}`
 **Response**: `{"output": "hello\n", "error": null}`
 
+### `POST /api/bash/execute-stream/{sessionId}` (Server-Sent Events)
+Execute bash commands with real-time streaming output for enhanced user experience.
+**Request**: `{"code": "for i in {1..3}; do echo \"Line $i\"; sleep 1; done"}`
+**Response**: SSE stream with incremental output events
+```
+data: {"type": "output", "content": "Line 1\n"}
+data: {"type": "output", "content": "Line 2\n"}
+data: {"type": "output", "content": "Line 3\n"}
+data: {"type": "complete", "returnCode": 0}
+```
+
 ### `POST /api/{language}/reset/{sessionId}`  
 Clear the execution state for the specified language and session.
 **Response**: `{"message": "Namespace reset successfully"}`
@@ -439,14 +453,21 @@ Rename a session.
 **Request**: `{"name": "New Session Name"}`
 **Response**: `{"message": "Session renamed successfully"}`
 
+### `PUT /api/sessions/{sessionId}/history/{entryId}`
+Update an existing terminal history entry (used for streaming output persistence).
+**Request**: `{"content": "Updated output content"}`
+**Response**: `{"message": "History entry updated successfully"}`
+
 ## Key Implementation Details
 
-### Architecture v2.0 Improvements
+### Architecture v2.1 Improvements
 - **Session Management**: Centralized session handling with automatic cleanup and metadata tracking
+- **Real-time Streaming**: Server-Sent Events (SSE) for incremental output in supported languages
 - **Error Handling**: Standardized error responses across all backends with proper HTTP status codes
 - **Development Experience**: Hot reloading, structured logging, and comprehensive development tooling
 - **Type Safety**: Enhanced TypeScript configurations and strict error handling
 - **Monitoring**: Built-in session statistics and performance metrics
+- **Configuration-Based Features**: Language-specific capabilities configured via `supportsStreaming` property
 
 ### Configuration Approach
 - **Environment Variables**: Comprehensive `.env` file configuration for all application settings
@@ -515,9 +536,15 @@ The frontend uses a custom hook-based architecture centered around three core ho
 - Terminal history is cached per session but cleared when sessions are deleted
 
 **useCodeExecution** (`frontend/src/hooks/useCodeExecution.ts`):
-- Handles code execution API calls to `/api/{language}/execute/{sessionId}`
+- Handles code execution API calls to `/api/{language}/execute/{sessionId}` for non-streaming languages
 - Manages execution loading states and error handling
 - Integrates with terminal history via the `addEntry` callback
+
+**useStreamingExecution** (`frontend/src/hooks/useStreamingExecution.ts`):
+- Handles both streaming and non-streaming code execution based on language configuration
+- Manages Server-Sent Events (SSE) for real-time output streaming
+- Provides incremental terminal updates via `addEntry` and `updateEntry` callbacks
+- Automatically routes to appropriate execution method based on `supportsStreaming` property
 
 ### Session Management Architecture
 Sessions are managed through a dedicated session-manager service (`backend/session-manager/`):
@@ -529,6 +556,7 @@ Sessions are managed through a dedicated session-manager service (`backend/sessi
 ### Language Backend Integration
 Each language backend exposes session-aware endpoints:
 - **Session Persistence**: `/execute/{sessionId}` maintains isolated execution environments per session
+- **Streaming Support**: `/execute-stream/{sessionId}` provides real-time output via SSE (bash backend)
 - **Session Reset**: `/reset/{sessionId}` clears only the specific session's execution state
 - **Health Checks**: `/health` endpoints for container orchestration monitoring
 
@@ -536,7 +564,8 @@ Each language backend exposes session-aware endpoints:
 The session manager (`backend/session-manager/`) provides centralized session persistence:
 - **SQLite Database**: Stores session metadata, terminal history, and environment state
 - **Session CRUD**: Full create, read, update, delete operations for sessions
-- **Terminal History**: Persistent terminal entry storage across browser sessions
+- **Terminal History**: Persistent terminal entry storage across browser sessions with update capabilities
+- **History Updates**: `/sessions/{sessionId}/history/{entryId}` endpoint for streaming output persistence
 - **Environment Serialization**: Backend execution environments can be serialized/deserialized via session manager
 
 # Development Workflow Commands
@@ -582,13 +611,67 @@ Backends can be tested by accessing their health endpoints and executing sample 
 ### Terminal UI Implementation
 - **Entry Types**: `TerminalEntry` supports `'input' | 'output' | 'error'` with distinct styling
 - **Real-time Updates**: Terminal auto-scrolls and focuses input after code execution
+- **Streaming Output**: Incremental updates for streaming languages with unified loading indicators
 - **Session Switching**: Changing sessions loads that session's terminal history
 - **Conditional Rendering**: Terminal only displays when an active session exists
 - **Session Requirement UI**: Shows "No Active Session" message with instructions when no session is active
 - **Styling System**: CSS uses terminal color scheme (`#7dd3fc` blue, dark backgrounds) with hover effects
+- **Dual Execution Modes**: Automatic routing between streaming and non-streaming based on language configuration
 
 ### Container Orchestration
 - **Main Stack**: `docker-compose.yml` orchestrates frontend + all backends
 - **Backend-Only**: `backend/docker-compose.yml` for backend development/testing
 - **Networking**: `webrepl-network` bridge network connects all containers
 - **Build Optimization**: Comprehensive `.dockerignore` files minimize build contexts
+
+# Server-Sent Events (SSE) Streaming Architecture
+
+## Overview
+The application implements real-time output streaming using Server-Sent Events (SSE) for enhanced user experience with long-running commands. Currently implemented for the Bash backend with extensible architecture for other languages.
+
+## Streaming Implementation
+
+### Backend Architecture (Bash)
+- **Endpoint**: `/execute-stream/{sessionId}` provides SSE streaming
+- **Temporary Scripts**: Commands executed via temporary script files for proper bash handling
+- **Async Processing**: `asyncio.create_subprocess_exec` for non-blocking execution
+- **Event Types**: `output`, `error`, and `complete` events with structured JSON data
+- **Session Isolation**: Per-session working directories maintain command context
+
+### Frontend Architecture
+- **Dual Hook System**: 
+  - `useCodeExecution`: Traditional request/response for non-streaming languages
+  - `useStreamingExecution`: SSE handling with automatic routing based on language config
+- **Configuration-Based**: `supportsStreaming` property in language configuration
+- **Real-time Updates**: Incremental terminal entry updates via `updateEntry` function
+- **History Persistence**: Streaming updates saved to session manager database
+
+### Event Flow
+1. **Command Execution**: Frontend detects streaming-enabled language and uses SSE endpoint
+2. **Real-time Streaming**: Backend sends incremental output as SSE events
+3. **Frontend Processing**: Events parsed and terminal updated incrementally
+4. **History Persistence**: Updates saved to session manager for page refresh persistence
+5. **Completion**: Final event indicates command completion with return code
+
+### Language Configuration
+```typescript
+interface Language {
+  id: string
+  name: string
+  icon: string
+  supportsStreaming?: boolean  // Enables SSE streaming for this language
+}
+```
+
+### SSE Event Format
+```
+data: {"type": "output", "content": "Line 1\n"}
+data: {"type": "error", "content": "Error message\n"}
+data: {"type": "complete", "returnCode": 0}
+```
+
+## Benefits
+- **Real-time Feedback**: Users see output as it's generated
+- **Better UX**: No waiting for long-running commands to complete
+- **Persistent History**: Streaming updates preserved across browser sessions
+- **Scalable**: Configuration-based approach allows easy extension to other languages
