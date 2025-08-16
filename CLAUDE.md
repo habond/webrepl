@@ -535,7 +535,9 @@ This application executes arbitrary code (Python, JavaScript, Ruby, PHP, Kotlin,
 # Frontend Architecture Deep Dive
 
 ### React Component Architecture
-The frontend uses a custom hook-based architecture centered around three core hooks:
+The frontend uses a modular hook-based architecture with specialized hooks for different concerns:
+
+**Core Execution Hooks:**
 
 **useSessionManager** (`frontend/src/hooks/useSessionManager.ts`):
 - Manages all session CRUD operations via `/api/sessions` endpoints
@@ -559,6 +561,33 @@ The frontend uses a custom hook-based architecture centered around three core ho
 - Manages Server-Sent Events (SSE) for real-time output streaming
 - Provides incremental terminal updates via `addEntry` and `updateEntry` callbacks
 - Automatically routes to appropriate execution method based on `supportsStreaming` property
+
+**Orchestration Hooks:**
+
+**useCodeExecutionHandler** (`frontend/src/hooks/useCodeExecutionHandler.ts`):
+- Orchestrates the complete execution flow (clear input → execute → focus input)
+- Routes between streaming and non-streaming execution based on language configuration
+- Provides unified `handleExecute` function that manages the entire execution lifecycle
+- Encapsulates execution complexity away from main App component
+
+**useSessionSelection** (`frontend/src/hooks/useSessionSelection.ts`):
+- Manages automatic session selection logic when sessions change
+- Handles session existence validation and fallback selection
+- Selects most recent session when current session is deleted or none is selected
+- Manages initialization states and loading conditions
+
+**useKeyboardShortcuts** (`frontend/src/hooks/useKeyboardShortcuts.ts`):
+- Handles global keyboard shortcuts for session switching
+- Platform-specific shortcuts (Cmd+Option on Mac, Ctrl+Alt on Windows/Linux)
+- Number keys (1-9) for direct session access, brackets ([/]) for prev/next navigation
+- Automatically refocuses input after session switching
+
+**UI Components:**
+
+**NoActiveSession** (`frontend/src/components/ui/NoActiveSession.tsx`):
+- Displays user-friendly message when no session is selected
+- Provides visual guidance for session creation
+- Replaces inline JSX with reusable component for better maintainability
 
 ### Session Management Architecture
 Sessions are managed through a dedicated session-manager service (`backend/session-manager/`):
@@ -628,9 +657,10 @@ Backends can be tested by accessing their health endpoints and executing sample 
 - **Streaming Output**: Incremental updates for streaming languages with unified loading indicators
 - **Session Switching**: Changing sessions loads that session's terminal history
 - **Conditional Rendering**: Terminal only displays when an active session exists
-- **Session Requirement UI**: Shows "No Active Session" message with instructions when no session is active
+- **Session Requirement UI**: Shows `NoActiveSession` component with instructions when no session is active
 - **Styling System**: CSS uses terminal color scheme (`#7dd3fc` blue, dark backgrounds) with hover effects
 - **Dual Execution Modes**: Automatic routing between streaming and non-streaming based on language configuration
+- **Modular Architecture**: App component orchestrates specialized hooks rather than handling all logic directly
 
 ### Container Orchestration
 - **Main Stack**: `docker-compose.yml` orchestrates frontend + all backends
@@ -697,3 +727,33 @@ data: {"type": "complete", "returnCode": 0}
 - **Better UX**: No waiting for long-running commands to complete
 - **Persistent History**: Streaming updates preserved across browser sessions
 - **Scalable**: Configuration-based approach allows easy extension to other languages
+
+# Code Architecture Patterns
+
+## Hook-Based Modular Design
+The frontend follows a pattern of extracting complex logic into specialized custom hooks:
+
+**Single Responsibility Principle**: Each hook has a focused purpose:
+- Session management (`useSessionManager`)
+- Terminal state (`useTerminal`) 
+- Code execution orchestration (`useCodeExecutionHandler`)
+- Automatic session selection (`useSessionSelection`)
+- Keyboard shortcuts (`useKeyboardShortcuts`)
+
+**Component Extraction**: UI elements are extracted into reusable components when they have distinct purposes:
+- `NoActiveSession` for empty state messaging
+- Clear separation between business logic (hooks) and presentation (components)
+
+**Type Safety**: All hooks use proper TypeScript interfaces:
+- Import types using `import type { }` syntax due to `verbatimModuleSyntax`
+- Consistent type definitions across the application
+- Proper error handling with typed responses
+
+## Development Patterns
+When refactoring or adding features, follow these established patterns:
+
+1. **Extract Logic to Hooks**: Complex state management or business logic should be moved to custom hooks
+2. **Component Separation**: UI elements with distinct purposes should be separate components  
+3. **Type Imports**: Use `import type { }` for type-only imports
+4. **Consistent API Patterns**: All execution endpoints follow `/{language}/execute/{sessionId}` pattern
+5. **Error Standardization**: Maintain consistent error response formats across all backends
