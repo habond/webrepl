@@ -137,7 +137,37 @@ When adding a new language backend:
 
 ## Testing
 
-Backends can be tested by accessing their health endpoints and executing sample code through the API.
+### Automated Test Suite Runner
+
+**Run all backend tests**:
+```bash
+cd backend
+./test.sh
+```
+
+The backend test suite runner:
+- Automatically discovers backends with test suites
+- Runs all available backend tests in parallel
+- Provides colored output with detailed results summary
+- Reports passed/failed/skipped backends with proper exit codes
+
+**Current backends with test suites**:
+- **bash**: 15 comprehensive test cases with session isolation and streaming
+- **javascript**: 22 comprehensive test cases with session persistence and ES6 features
+
+### Individual Backend Testing
+
+Backends with test suites can be tested individually:
+
+```bash
+# Test specific backend
+cd backend/bash && ./test.sh
+cd backend/javascript && ./test.sh
+```
+
+### Manual Testing
+
+Backends can also be tested by accessing their health endpoints and executing sample code through the API.
 
 ## Development
 
