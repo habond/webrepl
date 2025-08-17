@@ -132,7 +132,7 @@ jobs:
           if [ -d "$backend/tests" ]; then
             echo "=== $backend test logs ==="
             cd "$backend/tests" || continue
-            docker-compose logs || echo "No logs available for $backend"
+            docker compose logs || echo "No logs available for $backend"
             cd ..
           fi
         done
