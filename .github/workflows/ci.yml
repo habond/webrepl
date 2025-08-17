@@ -95,6 +95,48 @@ jobs:
       working-directory: frontend
       run: npm run build
       
+  backend-tests:
+    name: Backend Test Suites
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Verify Docker Compose
+      run: |
+        echo "=== Docker version ==="
+        docker --version
+        echo "=== Docker Compose version ==="
+        docker compose version
+        
+    - name: Run backend test suite
+      working-directory: backend
+      run: |
+        echo "=== Running automated backend test suite ==="
+        chmod +x test.sh
+        ./test.sh
+        
+    - name: Show container logs on failure
+      if: failure()
+      working-directory: backend
+      run: |
+        echo "=== Checking for running containers ==="
+        docker ps -a
+        echo "=== Backend test logs ==="
+        # Try to get logs from any test containers that might still be running
+        for backend in bash javascript php; do
+          if [ -d "$backend/tests" ]; then
+            echo "=== $backend test logs ==="
+            cd "$backend/tests" || continue
+            docker-compose logs || echo "No logs available for $backend"
+            cd ..
+          fi
+        done
+
   python-backend-test:
     name: Python Backend Quality Checks
     runs-on: ubuntu-latest
@@ -142,7 +184,7 @@ jobs:
     
     strategy:
       matrix:
-        service: [frontend, backend-python, backend-javascript, backend-ruby, backend-php, backend-kotlin, session-manager]
+        service: [frontend, backend-python, backend-javascript, backend-ruby, backend-php, backend-kotlin, backend-haskell, backend-bash, backend-perl, session-manager]
         
     steps:
     - name: Checkout code
