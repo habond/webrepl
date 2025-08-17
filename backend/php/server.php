@@ -187,7 +187,8 @@ function captureOutput($code, $context = []) {
         if (!preg_match('/;\s*$/', trim($code)) && !preg_match('/^\s*(if|for|while|foreach|function|class|switch|try)\s/i', trim($code))) {
             $result = @eval("return $code;");
             if ($result !== null && $result !== false) {
-                // Output the result without debugging
+                // Output the result for REPL-like behavior
+                echo $result;
             }
         } else {
             // Execute as statement

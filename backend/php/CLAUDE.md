@@ -243,7 +243,56 @@ print_r($data);
 
 ## Testing
 
-The backend can be tested by accessing the health endpoint and executing sample PHP code through the API.
+The PHP backend includes a comprehensive test suite using containerized testing with session-manager integration.
+
+#### Automated Test Suite
+
+**Run all tests**:
+```bash
+./test.sh
+```
+
+The test script:
+- Builds containerized test environment with session-manager dependency
+- Runs comprehensive API tests via Docker Compose
+- Tests both traditional execution and session persistence
+- Ensures proper session isolation and cleanup
+- Returns exit code 0 for success, 1 for failure
+
+**Test Architecture**:
+- `tests/docker-compose.yml`: Orchestrates session-manager + php-backend + test runner containers
+- `tests/test.py`: Pytest-based test suite with comprehensive endpoint coverage
+- `tests/Dockerfile`: Python test runner container with pytest and requests
+- `tests/requirements.txt`: Python dependencies (pytest + requests)
+- Health checks ensure both session-manager and backend are ready before running tests
+
+**Test Coverage**:
+- Health endpoint validation
+- Variable persistence across executions
+- Function and class persistence
+- Session isolation between different session IDs
+- Error handling (syntax errors, runtime errors, validation)
+- PHP language features (arrays, classes, built-in functions)
+- Control structures (loops, conditionals)
+- JSON operations and string manipulation
+- Expression evaluation and session reset functionality
+- Complex PHP features (closures, array functions)
+
+#### Manual Testing
+```bash
+# Health check
+curl http://localhost:8000/health
+
+# Execute code (requires valid session)
+curl -X POST http://localhost:8000/execute/session-uuid \
+  -H "Content-Type: application/json" \
+  -d '{"code": "$x = 42; echo $x;"}'
+
+# Reset session
+curl -X POST http://localhost:8000/reset/session-uuid
+```
+
+**Note**: Manual testing requires a valid session created through the session-manager service.
 
 ## Performance Considerations
 
@@ -270,3 +319,19 @@ The REPL supports advanced PHP capabilities:
 - **Magic Methods**: __construct, __toString, __get, __set, etc.
 - **Static Methods**: Class::method() static method calls
 - **Constants**: define() and const declarations
+
+## File Structure
+
+```
+backend/php/
+├── server.php          # Main PHP application with session integration
+├── Dockerfile          # Container configuration
+├── .dockerignore       # Build exclusions
+├── test.sh             # Test runner script for containerized testing
+├── tests/              # Comprehensive test suite
+│   ├── docker-compose.yml  # Test orchestration with session-manager
+│   ├── Dockerfile      # Python test runner container
+│   ├── requirements.txt     # Python test dependencies
+│   └── test.py         # Pytest test suite (24 test cases)
+└── CLAUDE.md           # This documentation
+```

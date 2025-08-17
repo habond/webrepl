@@ -1,0 +1,61 @@
+services:
+  session-manager:
+    build:
+      context: ../../session-manager
+      dockerfile: Dockerfile
+    container_name: session-manager-test
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_PATH=/tmp/test_sessions.db
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: "no"  # Don't restart for tests
+
+  php-backend:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: php-backend-test
+    ports:
+      - "8002:8000"  # Use different port to avoid conflicts
+    environment:
+      - ENVIRONMENT=development
+      - SESSION_MANAGER_URL=http://session-manager:8000
+    networks:
+      - test-network
+    depends_on:
+      session-manager:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php", "-r", "file_get_contents('http://localhost:8000/health') or exit(1);"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: "no"  # Don't restart for tests
+
+  php-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: php-tests
+    depends_on:
+      php-backend:
+        condition: service_healthy
+    environment:
+      - BASE_URL=http://php-backend:8000
+      - SESSION_MANAGER_URL=http://session-manager:8000
+    networks:
+      - test-network
+    command: ["pytest", "test.py", "-v", "--tb=short"]
+    restart: "no"  # Don't restart for tests
+
+networks:
+  test-network:
+    driver: bridge
