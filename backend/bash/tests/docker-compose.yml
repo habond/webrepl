@@ -1,0 +1,38 @@
+services:
+  bash-backend:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: bash-backend-test
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: "no"  # Don't restart for tests
+
+  bash-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bash-tests
+    depends_on:
+      bash-backend:
+        condition: service_healthy
+    environment:
+      - BASE_URL=http://bash-backend:8000
+    networks:
+      - test-network
+    command: ["pytest", "test.py", "-v", "--tb=short"]
+    restart: "no"  # Don't restart for tests
+
+networks:
+  test-network:
+    driver: bridge
