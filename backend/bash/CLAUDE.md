@@ -188,6 +188,39 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Testing
+
+The bash backend includes a comprehensive test suite using Docker containers for isolated testing.
+
+#### Automated Test Suite
+
+**Run all tests**:
+```bash
+./test.sh
+```
+
+The test script:
+- Builds containerized test environment
+- Runs comprehensive API tests via Docker Compose
+- Tests both traditional and streaming execution modes
+- Ensures proper session isolation and cleanup
+- Returns exit code 0 for success, 1 for failure
+
+**Test Architecture**:
+- `tests/docker-compose.yml`: Orchestrates bash backend + test runner containers
+- `tests/test.py`: Pytest-based test suite with comprehensive endpoint coverage
+- `tests/Dockerfile`: Test runner container with pytest and requests
+- Health checks ensure backend is ready before running tests
+
+**Test Coverage**:
+- Health endpoint validation
+- Basic command execution (echo, pwd, file operations)
+- Session persistence and isolation
+- Error handling and validation
+- Streaming endpoint functionality
+- Session reset and cleanup
+- Bash-specific features (pipes, environment variables)
+
+#### Manual Testing
 ```bash
 # Health check
 curl http://localhost:8000/health
