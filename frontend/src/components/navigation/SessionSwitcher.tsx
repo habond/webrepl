@@ -5,9 +5,9 @@ import { AVAILABLE_LANGUAGES } from '@/config/languages'
 interface SessionSwitcherProps {
   sessions: SessionInfo[]
   currentSessionId: string | undefined
-  onCreateSession: (name?: string, language?: string) => Promise<any>
+  onCreateSession: (name?: string, language?: string) => Promise<void>
   onDeleteSession: (sessionId: string) => Promise<void>
-  onRenameSession: (sessionId: string, newName: string) => Promise<any>
+  onRenameSession: (sessionId: string, newName: string) => Promise<void>
   onSelectSession: (sessionId: string) => void
   isLoading: boolean
 }

@@ -114,7 +114,7 @@ export const useSessionManager = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [sessions, fetchSessions])
+  }, [fetchSessions])
 
   // Get session by ID
   const getSession = useCallback(async (sessionId: string): Promise<SessionInfo | null> => {

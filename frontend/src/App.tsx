@@ -93,7 +93,6 @@ function App() {
           if (newSession) {
             setCurrentSessionId(newSession.id)
           }
-          return newSession
         }}
         onDeleteSession={async (sessionId) => {
           await deleteSession(sessionId)

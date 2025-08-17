@@ -133,7 +133,7 @@ export const useTerminal = (sessionId: string, sessionLanguage?: string, session
     const newInput = typeof input === 'function' ? input(currentInput) : input
     updateSessionState({ currentInput: newInput })
     setSessionState(prev => ({ ...prev, currentInput: newInput }))
-  }, [currentInput, sessionId, updateSessionState])
+  }, [currentInput, updateSessionState])
 
   const addEntry = useCallback((entry: TerminalEntry) => {
     // Get the current history dynamically to avoid stale closure issues

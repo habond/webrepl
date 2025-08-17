@@ -16,7 +16,7 @@ interface LogContext {
   component?: string
   action?: string
   duration?: number
-  [key: string]: any
+  [key: string]: unknown
 }
 
 class Logger {
@@ -98,7 +98,7 @@ class Logger {
   }
 
   // Component lifecycle logging
-  componentMount(componentName: string, props?: any): void {
+  componentMount(componentName: string, props?: unknown): void {
     this.debug(`Component mounted: ${componentName}`, { component: componentName, props })
   }
 

@@ -3,7 +3,7 @@ import { API_BASE_URL, API_TIMEOUT, ERROR_MESSAGES } from '@/config/constants'
 import { log } from '@/utils/logger'
 
 class REPLService {
-  private async makeRequest(method: string, url: string, body?: any): Promise<Response> {
+  private async makeRequest(method: string, url: string, body?: unknown): Promise<Response> {
     const fullUrl = `${API_BASE_URL}${url}`
     log.apiRequest(method, fullUrl)
     
@@ -107,7 +107,7 @@ class REPLService {
     }
   }
 
-  async getSessionInfo(sessionId: string): Promise<any> {
+  async getSessionInfo(sessionId: string): Promise<unknown> {
     try {
       // Try to get session info from any backend (they should be consistent)
       const response = await this.makeRequest('GET', '/python/sessions')
@@ -130,7 +130,7 @@ class REPLService {
 export const replService = new REPLService()
 
 class SessionHistoryService {
-  private async makeRequest(method: string, url: string, body?: any): Promise<Response> {
+  private async makeRequest(method: string, url: string, body?: unknown): Promise<Response> {
     const fullUrl = `/api${url}` // Use session manager API
     
     try {
@@ -190,7 +190,7 @@ class SessionHistoryService {
     }
 
     const data = await response.json()
-    return data.history.map((entry: any) => ({
+    return data.history.map((entry: { id: string; type: string; content: string; timestamp: string; language?: string }) => ({
       ...entry,
       timestamp: new Date(entry.timestamp),
     }))

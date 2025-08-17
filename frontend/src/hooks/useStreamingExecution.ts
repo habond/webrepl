@@ -159,7 +159,7 @@ export const useStreamingExecution = (sessionId: string) => {
                       onAddEntry(errorEntry)
                     }
                   }
-                } catch (e) {
+                } catch {
                   // Skip malformed SSE data
                 }
               }
@@ -167,12 +167,20 @@ export const useStreamingExecution = (sessionId: string) => {
           }
         }
       }
-    } catch (error: any) {
-      if (error.name !== 'AbortError') {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name !== 'AbortError') {
         const errorEntry: TerminalEntry = {
           id: uuidv4(),
           type: 'error',
           content: error.message || 'Failed to connect to server',
+          timestamp: new Date(),
+        }
+        onAddEntry(errorEntry)
+      } else if (!(error instanceof Error)) {
+        const errorEntry: TerminalEntry = {
+          id: uuidv4(),
+          type: 'error',
+          content: 'Failed to connect to server',
           timestamp: new Date(),
         }
         onAddEntry(errorEntry)
