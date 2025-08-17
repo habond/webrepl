@@ -32,21 +32,32 @@ function serializeContext(vmContext) {
     // Extract serializable properties from the VM context
     const serializable = {}
     
-    for (const key in vmContext) {
+    // Get all properties including non-enumerable ones and symbol properties
+    const allKeys = [
+      ...Object.getOwnPropertyNames(vmContext),
+      ...Object.getOwnPropertySymbols(vmContext)
+    ]
+    
+    for (const key of allKeys) {
       if (key === 'console' || key.startsWith('_')) continue // Skip console and internal props
       
-      const value = vmContext[key]
-      if (typeof value === 'function') {
-        serializable[key] = { __type: 'function', __source: value.toString() }
-      } else if (typeof value === 'object' && value !== null) {
-        try {
-          JSON.stringify(value) // Test if serializable
+      try {
+        const value = vmContext[key]
+        if (typeof value === 'function') {
+          serializable[key] = { __type: 'function', __source: value.toString() }
+        } else if (typeof value === 'object' && value !== null) {
+          try {
+            JSON.stringify(value) // Test if serializable
+            serializable[key] = value
+          } catch (e) {
+            // Skip non-serializable objects
+          }
+        } else {
           serializable[key] = value
-        } catch (e) {
-          // Skip non-serializable objects
         }
-      } else {
-        serializable[key] = value
+      } catch (e) {
+        // Skip properties that can't be accessed
+        console.warn(`Failed to serialize property ${key}:`, e)
       }
     }
     
@@ -65,23 +76,42 @@ function deserializeContext(serializedData) {
     const jsonData = Buffer.from(serializedData, 'base64').toString('utf-8')
     const serializable = JSON.parse(jsonData)
     
-    const context = createFreshContext()
+    // Create base context first
+    const baseContext = {
+      _output: '',
+      _error: ''
+    }
+    
+    // Add console functions that reference the context
+    baseContext.console = {
+      log: (...args) => {
+        baseContext._output += args.map(arg => 
+          typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+        ).join(' ') + '\n'
+      },
+      error: (...args) => {
+        baseContext._error += args.map(arg => 
+          typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+        ).join(' ') + '\n'
+      }
+    }
     
     // Restore serialized properties
     for (const [key, value] of Object.entries(serializable)) {
       if (typeof value === 'object' && value !== null && value.__type === 'function') {
         try {
-          // Restore function from source
-          context[key] = vm.runInContext(`(${value.__source})`, context)
+          // Create VM context and restore function
+          const vmContext = vm.createContext(baseContext)
+          baseContext[key] = vm.runInContext(`(${value.__source})`, vmContext)
         } catch (e) {
           console.warn(`Failed to restore function ${key}:`, e)
         }
       } else {
-        context[key] = value
+        baseContext[key] = value
       }
     }
     
-    return context
+    return vm.createContext(baseContext)
   } catch (error) {
     console.warn('Failed to deserialize context:', error)
     return createFreshContext()
@@ -90,21 +120,24 @@ function deserializeContext(serializedData) {
 
 function createFreshContext() {
   const context = {
-    console: {
-      log: (...args) => {
-        context._output += args.map(arg => 
-          typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-        ).join(' ') + '\n'
-      },
-      error: (...args) => {
-        context._error += args.map(arg => 
-          typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-        ).join(' ') + '\n'
-      }
-    },
     _output: '',
     _error: ''
   }
+  
+  // Add console functions that reference the context
+  context.console = {
+    log: (...args) => {
+      context._output += args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+      ).join(' ') + '\n'
+    },
+    error: (...args) => {
+      context._error += args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+      ).join(' ') + '\n'
+    }
+  }
+  
   return vm.createContext(context)
 }
 
@@ -207,14 +240,36 @@ app.post('/execute/:sessionId', async (req, res) => {
     let executionError = null
 
     try {
+      // Transform const/let to var for persistence (simple regex replacement)
+      const transformedCode = code
+        .replace(/\bconst\s+/g, 'var ')
+        .replace(/\blet\s+/g, 'var ')
+      
+      
       // Execute code in persistent VM context
-      result = vm.runInContext(code, vmContext, {
+      result = vm.runInContext(transformedCode, vmContext, {
         timeout: 5000, // 5 second timeout
         displayErrors: true
       })
 
-      // If there's a result and no console output, show the result
+      // Handle Promise results by waiting for them to resolve
+      if (result && typeof result.then === 'function') {
+        try {
+          // Wait for the Promise to resolve
+          result = await result
+        } catch (promiseError) {
+          // If Promise rejects, treat as execution error
+          throw promiseError
+        }
+      }
+
+      // Combine console.log and console.error outputs
       let output = vmContext._output
+      if (vmContext._error) {
+        output += vmContext._error
+      }
+      
+      // If there's a result and no console output, show the result
       if (result !== undefined && !output.trim()) {
         output = String(result) + '\n'
       }
@@ -228,10 +283,10 @@ app.post('/execute/:sessionId', async (req, res) => {
       // Session info will come from session manager - we don't track it locally anymore
       const sessionData = null
 
-      // Format result using error handler
+      // Format result using error handler (don't pass _error as error since it's console.error, not execution error)
       const formattedResult = ErrorHandler.formatExecutionResult(
         output || '',
-        vmContext._error ? new Error(vmContext._error) : null,
+        null,
         sessionId,
         sessionData
       )
@@ -254,8 +309,14 @@ app.post('/execute/:sessionId', async (req, res) => {
       // Session info will come from session manager - we don't track it locally anymore
       const sessionData = null
 
+      // Include console.error output even when there's an execution error
+      let errorOutput = vmContext._output || ''
+      if (vmContext._error) {
+        errorOutput += vmContext._error
+      }
+      
       const formattedResult = ErrorHandler.formatExecutionResult(
-        vmContext._output || '',
+        errorOutput,
         executionError,
         sessionId,
         sessionData

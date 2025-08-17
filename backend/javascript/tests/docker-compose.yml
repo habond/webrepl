@@ -1,0 +1,61 @@
+services:
+  session-manager:
+    build:
+      context: ../../session-manager
+      dockerfile: Dockerfile
+    container_name: session-manager-test
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_PATH=/tmp/test_sessions.db
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: "no"  # Don't restart for tests
+
+  javascript-backend:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: javascript-backend-test
+    ports:
+      - "8001:8000"  # Use different port to avoid conflicts
+    environment:
+      - ENVIRONMENT=development
+      - SESSION_MANAGER_URL=http://session-manager:8000
+    networks:
+      - test-network
+    depends_on:
+      session-manager:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }).on('error', () => process.exit(1));"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: "no"  # Don't restart for tests
+
+  javascript-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: javascript-tests
+    depends_on:
+      javascript-backend:
+        condition: service_healthy
+    environment:
+      - BASE_URL=http://javascript-backend:8000
+      - SESSION_MANAGER_URL=http://session-manager:8000
+    networks:
+      - test-network
+    command: ["pytest", "test.py", "-v", "--tb=short"]
+    restart: "no"  # Don't restart for tests
+
+networks:
+  test-network:
+    driver: bridge

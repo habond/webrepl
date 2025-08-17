@@ -152,29 +152,41 @@ docker exec webrepl-backend-javascript node test_api.js
 
 ## Session Management Implementation
 
-```javascript
-// Session contexts stored in memory
-const sessionContexts = new Map();
+The JavaScript backend integrates with the centralized session-manager service for persistent session storage:
 
-function getSessionContext(sessionId) {
-    if (!sessionContexts.has(sessionId)) {
-        const context = vm.createContext({
-            console: createConsoleCapture(),
-            // Other global objects...
-        });
-        sessionContexts.set(sessionId, context);
+```javascript
+// Get session context from session manager with deserialization
+async function getSessionContext(sessionId) {
+    try {
+        const response = await axios.get(`${SESSION_MANAGER_URL}/sessions/${sessionId}/environment`)
+        if (response.status === 200 && response.data.environment?.serialized_data) {
+            return deserializeContext(response.data.environment.serialized_data)
+        }
+        return createFreshContext()
+    } catch (error) {
+        return createFreshContext()
     }
-    return sessionContexts.get(sessionId);
 }
 
-function resetSessionContext(sessionId) {
-    const context = vm.createContext({
-        console: createConsoleCapture(),
-        // Reset to clean state...
-    });
-    sessionContexts.set(sessionId, context);
+// Save session context to session manager with serialization
+async function saveSessionContext(sessionId, vmContext) {
+    try {
+        const serializedData = serializeContext(vmContext)
+        await axios.put(`${SESSION_MANAGER_URL}/sessions/${sessionId}/environment`, {
+            language: 'javascript',
+            serialized_data: serializedData
+        })
+    } catch (error) {
+        console.warn('Failed to save session environment:', error)
+    }
 }
 ```
+
+**Key Features**:
+- **Persistent Storage**: Session data survives backend restarts via SQLite database
+- **Serialization**: Variables and functions are serialized/deserialized for persistence
+- **Variable Transformation**: `const`/`let` automatically transformed to `var` for VM context compatibility
+- **Function Restoration**: Functions are restored from source code with proper context binding
 
 ## Error Handling
 
@@ -182,6 +194,8 @@ function resetSessionContext(sessionId) {
 - **Runtime Errors**: Exceptions during execution caught and formatted
 - **Timeout Errors**: Long-running code terminated after 5 seconds
 - **Empty Code**: Returns HTTP 400 with appropriate error message
+- **Console Output**: Both `console.log()` and `console.error()` outputs are captured and included in response
+- **Promise Handling**: Promises are automatically awaited and resolved values are returned instead of `[object Promise]`
 
 ## Security
 
@@ -193,7 +207,55 @@ function resetSessionContext(sessionId) {
 
 ## Testing
 
-The backend can be tested by accessing the health endpoint and executing sample JavaScript code through the API.
+The JavaScript backend includes a comprehensive test suite using containerized testing with session-manager integration.
+
+#### Automated Test Suite
+
+**Run all tests**:
+```bash
+./test.sh
+```
+
+The test script:
+- Builds containerized test environment with session-manager dependency
+- Runs comprehensive API tests via Docker Compose
+- Tests both traditional execution and session persistence
+- Ensures proper session isolation and cleanup
+- Returns exit code 0 for success, 1 for failure
+
+**Test Architecture**:
+- `tests/docker-compose.yml`: Orchestrates session-manager + javascript-backend + test runner containers
+- `tests/test.py`: Pytest-based test suite with comprehensive endpoint coverage
+- `tests/Dockerfile`: Python test runner container with pytest and requests
+- `tests/requirements.txt`: Python dependencies (pytest + requests)
+- Health checks ensure both session-manager and backend are ready before running tests
+
+**Test Coverage**:
+- Health endpoint validation
+- Variable persistence across executions (`const`/`let` transformed to `var`)
+- Function persistence and serialization/deserialization
+- Session isolation between different session IDs
+- Error handling (syntax errors, runtime errors, validation)
+- ES6+ features (arrow functions, destructuring, classes, template literals)
+- Promise resolution and async handling
+- JSON operations and console output capture
+- Expression evaluation and session reset functionality
+
+#### Manual Testing
+```bash
+# Health check
+curl http://localhost:8000/health
+
+# Execute code (requires valid session)
+curl -X POST http://localhost:8000/execute/session-uuid \
+  -H "Content-Type: application/json" \
+  -d '{"code": "const x = 42; console.log(x);"}'
+
+# Reset session
+curl -X POST http://localhost:8000/reset/session-uuid
+```
+
+**Note**: Manual testing requires a valid session created through the session-manager service.
 
 ## JavaScript Capabilities
 
@@ -212,3 +274,22 @@ The REPL supports full JavaScript ES2020+ features:
 - Session cleanup happens automatically on container restart
 - Memory usage grows with number of active sessions
 - Consider implementing session cleanup for production deployments
+
+## File Structure
+
+```
+backend/javascript/
+├── server.js           # Main Express.js application with session integration
+├── errorHandler.js     # Standardized error handling and HTTP status codes
+├── sessionManager.js   # Session management utilities (legacy)
+├── package.json        # Node.js dependencies and scripts
+├── Dockerfile          # Container configuration
+├── .dockerignore       # Build exclusions
+├── test.sh             # Test runner script for containerized testing
+├── tests/              # Comprehensive test suite
+│   ├── docker-compose.yml  # Test orchestration with session-manager
+│   ├── Dockerfile      # Python test runner container
+│   ├── requirements.txt     # Python test dependencies
+│   └── test.py         # Pytest test suite (22 test cases)
+└── CLAUDE.md           # This documentation
+```
